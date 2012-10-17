@@ -1,6 +1,6 @@
 #!/bin/bash
 name=storm
-version=0.7.4
+version=0.8.1
 url=http://storm-project.net
 buildroot=build
 fakeroot=storm-${version}
