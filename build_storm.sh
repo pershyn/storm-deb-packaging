@@ -1,10 +1,14 @@
 #!/bin/bash
+
+
 name=storm
-version=0.7.4
+version=$1
+: ${version:="0.8.1"}
 url=http://storm-project.net
 buildroot=build
 fakeroot=storm-${version}
 origdir=$(pwd)
+prefix="/usr/lib"
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives for doing batch processing, Storm provides a set of general primitives for doing realtime computation. Storm is simple, can be used with any programming language, is used by many companies, and is a lot of fun to use!"
 
 #_ MAIN _#
@@ -23,7 +27,7 @@ rm -rf ${fakeroot}/conf
 #_ MAKE DIRECTORIES _#
 rm -rf ${buildroot}
 mkdir -p ${buildroot}
-mkdir -p ${buildroot}/opt/storm
+mkdir -p ${buildroot}/${prefix}/storm
 mkdir -p ${buildroot}/etc/default
 mkdir -p ${buildroot}/etc/storm/conf.d
 mkdir -p ${buildroot}/etc/init
@@ -31,7 +35,7 @@ mkdir -p ${buildroot}/var/log/storm
 mkdir -p ${buildroot}/var/lib/storm
 
 #_ COPY FILES _#
-cp -R ${fakeroot}/* ${buildroot}/opt/storm
+cp -Rv ${fakeroot}/* ${buildroot}/${prefix}/storm
 cp storm storm-nimbus storm-supervisor storm-ui storm-drpc ${buildroot}/etc/default
 cp storm.yaml ${buildroot}/etc/storm
 cp storm.log.properties ${buildroot}/etc/storm

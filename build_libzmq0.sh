@@ -7,6 +7,7 @@ package="http://download.zeromq.org/zeromq-${version}.tar.gz"
 buildroot=build
 fakeroot=libzmq0
 origdir=$(pwd)
+prefix="/usr"
 description='The 0MQ lightweight messaging kernel is a library which extends the
     standard socket interfaces with features traditionally provided by
     specialised messaging middleware products. 0MQ sockets provide an
@@ -15,6 +16,9 @@ description='The 0MQ lightweight messaging kernel is a library which extends the
     multiple transport protocols and more.
     .
     This package contains the ZeroMQ shared library.'
+
+# install dependencies
+apt-get install -y uuid-dev
 
 #_ MAIN _#
 rm -rf ${name}*.deb
@@ -28,7 +32,7 @@ cd ${fakeroot}
 wget ${package}
 tar -zxvf *.gz
 cd zeromq-${version}/
-./configure
+./configure --prefix=${prefix}
 make
 make install DESTDIR=${origdir}/${buildroot}
 
