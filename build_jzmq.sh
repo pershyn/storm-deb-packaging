@@ -33,5 +33,5 @@ make install DESTDIR=${origdir}/${buildroot}
 
 #_ MAKE DEBIAN _#
 cd ${origdir}/${buildroot}
-fpm -t deb -n ${name} -v ${version} --description "${description}" --url="${url}" -a ${arch} --prefix=/ -d "oracle-j2sdk1.6" -d "libzmq0 >= 2.1.7" -s dir -- .
+fpm -t deb -n ${name} -v ${version} --description "${description}" --url="${url}" -a ${arch} --prefix=/ -d "libzmq1 >= 2.1.7" -s dir -- .
 mv ${origdir}/${buildroot}/*.deb ${origdir}
