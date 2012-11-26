@@ -46,6 +46,6 @@ for f in ${buildroot}/etc/init/*; do f=$(basename $f); f=${f%.conf}; ln -s /lib/
 
 #_ MAKE DEBIAN _#
 cd ${buildroot}
-fpm -t deb -n $name -v $version --description "$description" --before-install ../storm_before_install.sh --after-remove ../storm_after_remove.sh --url="$url" -a all --prefix=/ -d "libzmq1 >= 2.1.7" -d "libjzmq >= 2.1.7" -s dir -- .
+fpm -t deb -n $name -v $version --description "$description" --before-install ../storm_before_install.sh --after-install ../storm_after_install.sh --after-remove ../storm_after_remove.sh --url="$url" -a all --prefix=/ -d "libzmq1 >= 2.1.7" -d "libjzmq >= 2.1.7" -s dir -- .
 mv ${origdir}/${buildroot}/*.deb ${origdir}
 cd ${origdir}
