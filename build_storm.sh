@@ -41,7 +41,6 @@ cp storm storm-nimbus storm-supervisor storm-ui storm-drpc ${buildroot}/etc/defa
 cp storm.yaml ${buildroot}/etc/storm
 cp storm.log.properties ${buildroot}/etc/storm
 cp storm-nimbus.conf storm-supervisor.conf storm-ui.conf storm-drpc.conf ${buildroot}/etc/init
-#_ after install and before remove scripts handle symlinking
 #_ Symlinks for upstart init scripts
 for f in ${buildroot}/etc/init/*; do f=$(basename $f); f=${f%.conf}; ln -s /lib/init/upstart-job ${buildroot}/etc/init.d/$f; done
 
