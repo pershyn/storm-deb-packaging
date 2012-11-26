@@ -61,3 +61,14 @@ Storm Package
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/lib/storm/
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/storm/
+
+Changes
+------
+This repository was originally forked from https://github.com/wmf-analytics/storm-deb-packaging.
+
+== wmf-analytics changes:
+- Now creates and runs as a storm user.
+- Symlinks /etc/init.d/storm-* services to /lib/init/upstart-job.
+- Fixes /etc/default and /etc/init shell variable naming bug.
+- Renames package name of libzmq0 to libzmq1 to match Ubuntu's.
+- Updated build scripts to work with newer versions of upstream packages.
