@@ -65,8 +65,6 @@ Storm Package
 Changes
 ------
 This repository was originally forked from https://github.com/wmf-analytics/storm-deb-packaging.
-
-== wmf-analytics changes:
 - Now creates and runs as a storm user.
 - Symlinks /etc/init.d/storm-* services to /lib/init/upstart-job.
 - Fixes /etc/default and /etc/init shell variable naming bug.
