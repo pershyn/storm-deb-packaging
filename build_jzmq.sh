@@ -1,28 +1,22 @@
 #!/bin/bash
-name=libjzmq
-arch='amd64' # Change to your architecture
-version=2.1.7
-url='https://github.com/nathanmarz/jzmq.git'
+name=jzmq
+arch="$(dpkg --print-architecture)"
+version=2.1.0-1
 buildroot=build
 fakeroot=jzmq
-origdir=$(pwd)
+origdir="$(pwd)"
 description='JZMQ is the Java bindings for ZeroMQ'
-# Make sure JAVA_HOME is set. Uncomment if necessary
-export JAVA_HOME='/usr/lib/jvm/java-6-sun-1.6.0.31'
+export JAVA_HOME="$(readlink -f /usr/bin/javac | sed 's:/bin/javac::')"
 
 #_ MAIN _#
 rm -rf ${name}*.deb
+mkdir -p tmp && pushd tmp
 rm -rf jzmq
-rm -rf ${buildroot}
-mkdir -p ${buildroot}
-git clone ${url}
+git clone https://github.com/nathanmarz/jzmq.git
 cd jzmq
+wget -O - https://github.com/nathanmarz/jzmq/pull/2.patch | patch -p1
 ./autogen.sh
 ./configure
-make
-make install DESTDIR=${origdir}/${buildroot}
-
-#_ MAKE DEBIAN _#
-cd ${origdir}/${buildroot}
-fpm -t deb -n ${name} -v ${version} --description "${description}" --url="${url}" -a ${arch} --prefix=/ -d "libzmq0 >= 2.1.7" -s dir -- .
-mv ${origdir}/${buildroot}/*.deb ${origdir}
+dpkg-buildpackage -rfakeroot
+mv "${name}_*.*" ${origdir}
+popd

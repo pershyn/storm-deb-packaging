@@ -1,10 +1,10 @@
 #!/bin/bash
 name=storm
-version=0.7.4
+version=0.8.1
 url=http://storm-project.net
 buildroot=build
 fakeroot=storm-${version}
-origdir=$(pwd)
+origdir="$(pwd)"
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives for doing batch processing, Storm provides a set of general primitives for doing realtime computation. Storm is simple, can be used with any programming language, is used by many companies, and is a lot of fun to use!"
 
 #_ MAIN _#
@@ -39,6 +39,6 @@ cp storm-nimbus.conf storm-supervisor.conf storm-ui.conf storm-drpc.conf ${build
 
 #_ MAKE DEBIAN _#
 cd ${buildroot}
-fpm -t deb -n $name -v $version --description "$description" --url="$url" -a all --prefix=/ -d "libzmq0 >= 2.1.7" -d "libjzmq >= 2.1.7" -s dir -- .
+fpm -t deb -n $name -v $version --description "$description" --url="$url" -a all --prefix=/ -d "libzmq0 = 2.1.7" -d "jzmq >= 2.1.0" -s dir -- .
 mv ${origdir}/${buildroot}/*.deb ${origdir}
 cd ${origdir}
