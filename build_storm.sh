@@ -23,7 +23,7 @@ mkdir -p storm
 cd storm
 mkdir -p build${storm_root_dir}
 mkdir -p build/etc/default
-mkdir -p build/etc/storm/conf.d
+mkdir -p build/etc/storm
 mkdir -p build/etc/init
 mkdir -p build/var/log/storm
 
