@@ -1,22 +1,41 @@
 #!/bin/bash
 name=jzmq
-arch="$(dpkg --print-architecture)"
 version=2.1.0-1
-buildroot=build
-fakeroot=jzmq
+description="JZMQ is the Java bindings for ZeroMQ"
+url="https://github.com/nathanmarz/jzmq"
+arch="$(dpkg --print-architecture)"
+section="misc"
 origdir="$(pwd)"
-description='JZMQ is the Java bindings for ZeroMQ'
 export JAVA_HOME="$(readlink -f /usr/bin/javac | sed 's:/bin/javac::')"
 
 #_ MAIN _#
 rm -rf ${name}*.deb
 mkdir -p tmp && pushd tmp
-rm -rf jzmq
+rm -rf jzmq*
 git clone https://github.com/nathanmarz/jzmq.git
 cd jzmq
 wget -O - https://github.com/nathanmarz/jzmq/pull/2.patch | patch -p1
 ./autogen.sh
-./configure
-dpkg-buildpackage -rfakeroot
-mv "${name}_*.*" ${origdir}
+./configure --with-zeromq=${origdir}/tmp/libzmq0/build/usr/local
+make
+mkdir build
+make install DESTDIR=`pwd`/build
+
+cd build
+fpm -t deb \
+    -n ${name} \
+    -v ${version} \
+    --description "${description}" \
+    --url="${url}" \
+    -a ${arch} \
+    --category ${section} \
+    --vendor "" \
+    -m "${USER}@localhost" \
+    --prefix=/ \
+    -d "libzmq0 >= 2.1.7" \
+    --after-install ${origdir}/shlib.postinst \
+    --after-remove ${origdir}/shlib.postuninst \
+    -s dir \
+    -- .
+mv ${name}*.deb ${origdir}
 popd
