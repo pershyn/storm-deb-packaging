@@ -1,4 +1,4 @@
-# /etc/default/storm-nimbus
+# /etc/default/storm-drpc
 
 #_ START? _#
 ENABLE="no"
