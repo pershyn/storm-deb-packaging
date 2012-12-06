@@ -53,7 +53,7 @@ fpm -t deb \
     --vendor "" \
     -m "${USER}@localhost" \
     --prefix=/ \
-    -d "libzmq0 = 2.1.7" -d "jzmq >= 2.1.0" \
+    -d "libzmq0 = 2.1.7" -d "jzmq >= 2.1.0" -d "unzip" \
     -s dir \
     -- .
 mv storm*.deb ${origdir}
