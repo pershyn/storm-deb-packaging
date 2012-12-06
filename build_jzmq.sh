@@ -1,10 +1,13 @@
 #!/bin/bash
+set -e
+set -u
 name=jzmq
 version=2.1.0-1
 description="JZMQ is the Java bindings for ZeroMQ"
 url="https://github.com/nathanmarz/jzmq"
 arch="$(dpkg --print-architecture)"
 section="misc"
+package_version=""
 origdir="$(pwd)"
 export JAVA_HOME="$(readlink -f /usr/bin/javac | sed 's:/bin/javac::')"
 
@@ -24,7 +27,7 @@ make install DESTDIR=`pwd`/build
 cd build
 fpm -t deb \
     -n ${name} \
-    -v ${version} \
+    -v ${version}${package_version} \
     --description "${description}" \
     --url="${url}" \
     -a ${arch} \

@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+set -u
 name=storm
 version=0.8.1
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
@@ -7,14 +9,15 @@ be used with any programming language, is used by many companies, and is a lot o
 url="http://storm-project.net"
 arch="all"
 section="misc"
-package="storm-${version}.zip"
-download_url="https://github.com/downloads/nathanmarz/storm/${package}"
+package_version=""
+src_package="storm-${version}.zip"
+download_url="https://github.com/downloads/nathanmarz/storm/${src_package}"
 origdir="$(pwd)"
 storm_root_dir=/usr/lib/storm
 
 #_ MAIN _#
 rm -rf ${name}*.deb
-if [[ ! -f "${package}" ]]; then
+if [[ ! -f "${src_package}" ]]; then
   wget ${download_url}
 fi
 mkdir -p tmp && pushd tmp
@@ -42,7 +45,7 @@ cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/stor
 #_ MAKE DEBIAN _#
 fpm -t deb \
     -n ${name} \
-    -v ${version} \
+    -v ${version}${package_version} \
     --description "${description}" \
     --url="{$url}" \
     -a ${arch} \
