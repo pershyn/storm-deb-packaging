@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 set -u
+set -x
 
 origdir="$(pwd)"
 src_dir=$origdir/../storm
@@ -8,7 +9,7 @@ src_dir=$origdir/../storm
 src_dir=$(cd $src_dir && pwd)
 
 version=$(cat $src_dir/project.clj | head -1 | awk '{print $NF}' | sed 's/"//g')
-if [ -z "$src_version" ]; then
+if [ -z "$version" ]; then
   echo "Could not determine version from $src_dir/project_clj" >&2
   exit 1
 fi
@@ -37,15 +38,11 @@ mkdir -p build/etc/storm
 mkdir -p build/etc/init
 mkdir -p build/var/log/storm
 
-package_checkout_dir=$origdir/../storm-${version}
-[ -d "$package_checkout_dir" ] || exit 1
-
-rm -rf $package_checkout_dir/logs
-rm -rf $package_checkout_dir/log4j
-rm -rf $package_checkout_dir/conf
-rm -f $package_checkout_dir/storm-*.jar
-cp -R $package_checkout_dir/ build${storm_root_dir}
-cp $src_jar build${storm_root_dir}
+unzip ${origdir}/storm-${version}.zip
+rm -rf storm-${version}/logs
+rm -rf storm-${version}/log4j
+rm -rf storm-${version}/conf
+cp -R storm-${version}/* build${storm_root_dir}
 
 cd build
 cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
@@ -56,7 +53,7 @@ cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/stor
 #_ MAKE DEBIAN _#
 fpm -t deb \
     -n ${name} \
-    -v ${src_version} \
+    -v ${version} \
     --description "${description}" \
     --url="{$url}" \
     -a ${arch} \
