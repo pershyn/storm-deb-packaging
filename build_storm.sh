@@ -1,6 +1,22 @@
 #!/bin/bash
 set -e
 set -u
+
+origdir="$(pwd)"
+src_dir=$origdir/storm
+[ -d "$src_dir" ] || exit 1
+
+src_version=$(cat $src_dir/project.clj | head -1 | awk '{print $NF}')
+if [ -z "$src_version" ]; then
+  echo "Could not determine version from $src_dir/project_clj" >&2
+  exit 1
+fi
+new_jar=$src_dir/target/storm-${src_version}.jar
+if [ ! -f "$new_jar" ]; then
+  echo "$new_jar not found" >&2
+  exit 1
+fi
+
 name=storm
 version=0.8.1
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
@@ -11,15 +27,10 @@ arch="all"
 section="misc"
 package_version=""
 src_package="storm-${version}.zip"
-download_url="https://github.com/downloads/nathanmarz/storm/${src_package}"
-origdir="$(pwd)"
 storm_root_dir=/usr/lib/storm
 
 #_ MAIN _#
 rm -rf ${name}*.deb
-if [[ ! -f "${src_package}" ]]; then
-  wget ${download_url}
-fi
 mkdir -p tmp && pushd tmp
 rm -rf storm
 mkdir -p storm
@@ -30,11 +41,15 @@ mkdir -p build/etc/storm
 mkdir -p build/etc/init
 mkdir -p build/var/log/storm
 
-unzip ${origdir}/storm-${version}.zip
-rm -rf storm-${version}/logs
-rm -rf storm-${version}/log4j
-rm -rf storm-${version}/conf
-cp -R storm-${version}/* build${storm_root_dir}
+package_checkout_dir=$origdir/../storm-${version}
+[ -d "$package_checkout_dir" ] || exit 1
+
+rm -rf $package_checkout_dir/logs
+rm -rf $package_checkout_dir/log4j
+rm -rf $package_checkout_dir/conf
+rm -f $package_checkout_dir/storm-*.jar
+cp -R $package_checkout_dir/ build${storm_root_dir}
+cp $src_jar build${storm_root_dir}
 
 cd build
 cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
@@ -45,7 +60,7 @@ cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/stor
 #_ MAKE DEBIAN _#
 fpm -t deb \
     -n ${name} \
-    -v ${version}${package_version} \
+    -v ${src_version} \
     --description "${description}" \
     --url="{$url}" \
     -a ${arch} \
@@ -56,5 +71,6 @@ fpm -t deb \
     -d "libzmq0 = 2.1.7" -d "jzmq >= 2.1.0" -d "unzip" \
     -s dir \
     -- .
+
 mv storm*.deb ${origdir}
 popd
