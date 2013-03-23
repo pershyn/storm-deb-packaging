@@ -4,22 +4,16 @@ set -u
 
 origdir="$(pwd)"
 src_dir=$origdir/../storm
-[ -d "$src_dir" ] || ( echo "Directory $src_dir not found"; false )
+[ -d "$src_dir" ] || ( echo "Directory $src_dir not found" >&2; false )
 src_dir=$(cd $src_dir && pwd)
 
-src_version=$(cat $src_dir/project.clj | head -1 | awk '{print $NF}' | sed 's/"//g')
+version=$(cat $src_dir/project.clj | head -1 | awk '{print $NF}' | sed 's/"//g')
 if [ -z "$src_version" ]; then
   echo "Could not determine version from $src_dir/project_clj" >&2
   exit 1
 fi
-new_jar=$src_dir/target/storm-${src_version}.jar
-if [ ! -f "$new_jar" ]; then
-  echo "$new_jar not found" >&2
-  exit 1
-fi
 
 name=storm
-version=0.8.1
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
 for doing batch processing, Storm provides a set of general primitives for doing realtime computation. Storm is simple, can
 be used with any programming language, is used by many companies, and is a lot of fun to use!"
@@ -27,7 +21,8 @@ url="http://storm-project.net"
 arch="all"
 section="misc"
 package_version=""
-src_package="storm-${version}.zip"
+src_package="$src_dir/storm-${version}.zip"
+[ -f "$src_package" ] || ( echo "File $src_package not found" >&2; false )
 storm_root_dir=/usr/lib/storm
 
 #_ MAIN _#
