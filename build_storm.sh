@@ -38,7 +38,7 @@ mkdir -p build/etc/storm
 mkdir -p build/etc/init
 mkdir -p build/var/log/storm
 
-unzip ${origdir}/storm-${version}.zip
+unzip ${src_dir}/storm-${version}.zip
 rm -rf storm-${version}/logs
 rm -rf storm-${version}/log4j
 rm -rf storm-${version}/conf
