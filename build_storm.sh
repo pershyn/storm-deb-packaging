@@ -3,10 +3,11 @@ set -e
 set -u
 
 origdir="$(pwd)"
-src_dir=$origdir/storm
-[ -d "$src_dir" ] || exit 1
+src_dir=$origdir/../storm
+[ -d "$src_dir" ] || ( echo "Directory $src_dir not found"; false )
+src_dir=$(cd $src_dir && pwd)
 
-src_version=$(cat $src_dir/project.clj | head -1 | awk '{print $NF}')
+src_version=$(cat $src_dir/project.clj | head -1 | awk '{print $NF}' | sed 's/"//g')
 if [ -z "$src_version" ]; then
   echo "Could not determine version from $src_dir/project_clj" >&2
   exit 1
