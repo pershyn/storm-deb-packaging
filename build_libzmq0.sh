@@ -2,7 +2,7 @@
 set -e
 set -u
 name=libzmq0
-version=2.1.7
+version=3.2.2
 description="The 0MQ lightweight messaging kernel is a library which extends the
 standard socket interfaces with features traditionally provided by
 specialised messaging middleware products. 0MQ sockets provide an
