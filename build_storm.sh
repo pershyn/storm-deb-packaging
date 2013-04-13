@@ -14,6 +14,7 @@ src_package="storm-${version}.zip"
 download_url="https://dl.dropbox.com/u/133901206/${src_package}"
 origdir="$(pwd)"
 storm_root_dir=/usr/lib/storm
+dist="debian" #use old debian init.d scripts or ubuntu upstart
 
 #_ MAIN _#
 rm -rf ${name}*.deb
@@ -27,7 +28,11 @@ cd storm
 mkdir -p build${storm_root_dir}
 mkdir -p build/etc/default
 mkdir -p build/etc/storm
-mkdir -p build/etc/init
+if [ $dist == "debian" ]; then
+  mkdir -p build/etc/init.d
+else
+  mkdir -p build/etc/init
+fi
 mkdir -p build/var/log/storm
 
 unzip ${origdir}/storm-${version}.zip
@@ -40,7 +45,11 @@ cd build
 cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
 cp ${origdir}/storm.yaml etc/storm
 cp ${origdir}/storm.log.properties etc/storm
-cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
+if [ $dist == "debian" ]; then
+  cp ${origdir}/init.d/storm-nimbus ${origdir}/init.d/storm-supervisor ${origdir}/init.d/storm-ui ${origdir}/init.d/storm-drpc etc/init.d
+else
+  cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
+fi 
 
 #_ MAKE DEBIAN _#
 fpm -t deb \
