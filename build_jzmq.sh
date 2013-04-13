@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 set -u
-name=jzmq
+name=libjzmq
 version=2.1.0-1
 description="JZMQ is the Java bindings for ZeroMQ"
 url="https://github.com/nathanmarz/jzmq"
@@ -35,7 +35,7 @@ fpm -t deb \
     --vendor "" \
     -m "${USER}@localhost" \
     --prefix=/ \
-    -d "libzmq0 >= 2.1.7" \
+    -d "libzmq0 >= 3.2.2" \
     --after-install ${origdir}/shlib.postinst \
     --after-remove ${origdir}/shlib.postuninst \
     -s dir \
