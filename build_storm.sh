@@ -14,7 +14,14 @@ src_package="storm-${version}.zip"
 download_url="https://dl.dropbox.com/u/133901206/${src_package}"
 origdir="$(pwd)"
 storm_root_dir=/usr/lib/storm
-dist="debian" #use old debian init.d scripts or ubuntu upstart
+#use old debian init.d scripts or ubuntu upstart
+dist="debian"
+
+# add e.g. to ~/.bash_profile 'export MAINTAINER="your@email.com"'
+# if variable not set, use default value
+if [[ -z "$MAINTAINER" ]]; then
+  MAINTAINER="${USER}@localhost"
+fi
 
 #_ MAIN _#
 rm -rf ${name}*.deb
@@ -60,7 +67,10 @@ fpm -t deb \
     -a ${arch} \
     --category ${section} \
     --vendor "" \
-    -m "${USER}@localhost" \
+    -m "$MAINTAINER" \
+    --before-install ${origdir}/before_install.sh \
+    --after-install ${origdir}/after_install.sh \
+    --after-remove ${origdir}/after_remove.sh \
     --prefix=/ \
     -d "libzmq0 >= 3.2.2" -d "libjzmq >= 2.1.0" -d "unzip" \
     -s dir \
