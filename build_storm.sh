@@ -61,7 +61,7 @@ if [ ! "$do_download" ]; then
     fi
 
     if [ -z "${version}" ]; then
-      echo "Could not determine version from ${src_dir}/project_clj" >&2
+      echo "Could not determine version from ${src_dir}/project_clj or ${src_dir}/VERSION" >&2
       exit 1
     fi
   fi
