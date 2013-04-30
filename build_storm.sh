@@ -1,18 +1,35 @@
 #!/bin/bash
 set -e
 set -u
-set -x
 
-origdir="$(pwd)"
-src_dir=$origdir/../storm
-[ -d "$src_dir" ] || ( echo "Directory $src_dir not found" >&2; false )
-src_dir=$(cd $src_dir && pwd)
-
-version=$(cat $src_dir/project.clj | head -1 | awk '{print $NF}' | sed 's/"//g')
-if [ -z "$version" ]; then
-  echo "Could not determine version from $src_dir/project_clj" >&2
-  exit 1
-fi
+do_download=''
+version=''
+default_version=0.8.1
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      echo >&2
+      echo "Usage: ${0##*/} [--download] [--version <version>]" >&2
+      echo >&2
+      echo "Build a Storm Debian package either from a downloaded zip package (--download)" >&2
+      echo "or one available locally in ../storm." >&2
+      echo >&2
+      echo "Version ${default_version} is downloaded by default if not specified." >&2
+      echo >&2
+      exit 1
+      ;;
+    -v|--version)
+      version=$2
+      shift
+      ;;
+    -d|--download)
+      do_download=1 ;;
+    *)
+      echo "Unknown option $1" >&2
+      exit 1
+  esac
+  shift
+done
 
 name=storm
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
@@ -22,8 +39,55 @@ url="http://storm-project.net"
 arch="all"
 section="misc"
 package_version=""
-src_package="$src_dir/storm-${version}.zip"
-[ -f "$src_package" ] || ( echo "File $src_package not found" >&2; false )
+
+set -x
+
+origdir="$(pwd)"
+src_dir="${origdir}/../storm"
+if [ ! -d "$src_dir" ]; then
+  echo "Source directory $src_dir does not exist, downloading package" >&2
+  do_download=1
+fi
+
+if [ ! "$do_download" ]; then
+  # Build from a zip package
+  src_dir=$(cd "${src_dir}" && pwd)
+
+  if [ -z "${version}" ]; then
+    if [ -f "${src_dir}/VERSION" ]; then
+      version=$(cat "${src_dir}/VERSION")
+    else
+      version=$(cat "${src_dir}/project.clj" | head -1 | awk '{gsub(/"/, ""); print $NF}')
+    fi
+
+    if [ -z "${version}" ]; then
+      echo "Could not determine version from ${src_dir}/project_clj" >&2
+      exit 1
+    fi
+  fi
+
+  src_package="${src_dir}/storm-${version}.zip"
+  if [ ! -f "${src_package}" ]; then
+    echo "File ${src_package} not found, cannot build from local zip package" >&2
+    exit 1
+  fi
+else
+  if [ -z "${version}" ]; then
+    version=${default_version}
+  fi
+
+  src_package="${origdir}/storm-${version}.zip"
+  download_url="https://github.com/downloads/nathanmarz/storm/${src_package##*/}"
+  origdir="$(pwd)"
+  if [ ! -f "${src_package}" ]; then
+    wget ${download_url}
+  fi
+  if [ ! -f "${src_package}" ]; then
+    echo "Failed to download package ${src_package}, still does not exist" >&2
+    exit 1
+  fi
+fi
+
 storm_root_dir=/usr/lib/storm
 
 #_ MAIN _#
@@ -38,7 +102,7 @@ mkdir -p build/etc/storm
 mkdir -p build/etc/init
 mkdir -p build/var/log/storm
 
-unzip ${src_dir}/storm-${version}.zip
+unzip "${src_package}"
 rm -rf storm-${version}/logs
 rm -rf storm-${version}/log4j
 rm -rf storm-${version}/conf
