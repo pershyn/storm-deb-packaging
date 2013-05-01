@@ -4,32 +4,70 @@ set -u
 
 do_download=''
 version=''
+origdir="$(pwd)"
+default_local_dir="${origdir}/../storm"
+local_dir=''
 default_version=0.8.1
+
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help)
-      echo >&2
-      echo "Usage: ${0##*/} [--download] [--version <version>]" >&2
-      echo >&2
-      echo "Build a Storm Debian package either from a downloaded zip package (--download)" >&2
-      echo "or one available locally in ../storm." >&2
-      echo >&2
-      echo "Version ${default_version} is downloaded by default if not specified." >&2
-      echo >&2
+      cat >&2 <<EOT
+Usage: ${0##*/} [<options>]
+
+Build a Storm Debian package either from a downloaded zip package (--download)
+or one available locally in ../storm.
+
+Options:
+
+  -d, --download
+    Download a Storm zip package from github. This is false by default.
+
+  -l, --local-dir <dir>
+    Use the specified Storm source directory to get the Storm zip package,
+    ${default_local_dir} by default
+
+  -v, --version <version>
+    Use the given version of Storm (default: ${default_version} for a download or
+    the version autodetected from project.clj or a VERSION file for local build).
+
+EOT
       exit 1
+      ;;
+    -d|--download)
+      do_download=1
       ;;
     -v|--version)
       version=$2
+      if [ -z "${version}" ]; then
+        echo "Invalid download version specified" >&2
+        exit 1
+      fi
       shift
       ;;
-    -d|--download)
-      do_download=1 ;;
+    -l|--local-dir)
+      local_dir=$2
+      if [ ! -d "${local_dir}" ]; then
+        echo "Directory ${local_dir} does not exist" >&2
+        exit 1
+      fi
+      shift
+      ;;
     *)
       echo "Unknown option $1" >&2
       exit 1
   esac
   shift
 done
+
+if [[ -n "${local_dir}" && "${do_download}" ]]; then
+  echo "--download and --local-dir are incompatible" >&2
+  exit 1
+fi
+
+if [ -z "${local_dir}" ]; then
+  local_dir=${default_local_dir}
+fi
 
 name=storm
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
@@ -42,32 +80,33 @@ package_version=""
 
 set -x
 
-origdir="$(pwd)"
-src_dir="${origdir}/../storm"
-if [ ! -d "$src_dir" ]; then
-  echo "Source directory $src_dir does not exist, downloading package" >&2
-  do_download=1
-fi
-
-if [ ! "$do_download" ]; then
-  # Build from a zip package
-  src_dir=$(cd "${src_dir}" && pwd)
+if [ ! "${do_download}" ]; then
+  # Build from a zip package in the specified directory.
+  if [ ! -d "${local_dir}" ]; then
+    # Re-check directory existence. This may be either a command line option or the default.
+    set +x
+    echo "Directory ${local_dir} does not exist" >&2
+    exit 1
+  fi
+  local_dir=$(cd "${local_dir}" && pwd)
 
   if [ -z "${version}" ]; then
-    if [ -f "${src_dir}/VERSION" ]; then
-      version=$(cat "${src_dir}/VERSION")
+    if [ -f "${local_dir}/VERSION" ]; then
+      version=$(cat "${local_dir}/VERSION")
     else
-      version=$(cat "${src_dir}/project.clj" | head -1 | awk '{gsub(/"/, ""); print $NF}')
+      version=$(cat "${local_dir}/project.clj" | head -1 | awk '{gsub(/"/, ""); print $NF}')
     fi
 
     if [ -z "${version}" ]; then
-      echo "Could not determine version from ${src_dir}/project_clj or ${src_dir}/VERSION" >&2
+      set +x
+      echo "Could not determine version from ${local_dir}/project_clj or ${local_dir}/VERSION" >&2
       exit 1
     fi
   fi
 
-  src_package="${src_dir}/storm-${version}.zip"
+  src_package="${local_dir}/storm-${version}.zip"
   if [ ! -f "${src_package}" ]; then
+    set +x
     echo "File ${src_package} not found, cannot build from local zip package" >&2
     exit 1
   fi
@@ -83,6 +122,7 @@ else
     wget ${download_url}
   fi
   if [ ! -f "${src_package}" ]; then
+    set +x
     echo "Failed to download package ${src_package}, still does not exist" >&2
     exit 1
   fi
@@ -131,3 +171,4 @@ fpm -t deb \
 
 mv storm*.deb ${origdir}
 popd
+
