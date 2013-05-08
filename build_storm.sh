@@ -94,7 +94,7 @@ if [ ! "${do_download}" ]; then
     if [ -f "${local_dir}/VERSION" ]; then
       version=$(cat "${local_dir}/VERSION")
     else
-      version=$(cat "${local_dir}/project.clj" | head -1 | awk '{gsub(/"/, ""); print $NF}')
+      version=$(cat "${local_dir}/project.clj" | grep defproject | awk '{gsub(/"/, ""); print $NF}')
     fi
 
     if [ -z "${version}" ]; then
