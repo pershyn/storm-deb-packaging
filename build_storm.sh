@@ -8,6 +8,7 @@ origdir="$(pwd)"
 default_local_dir="${origdir}/../storm"
 local_dir=''
 default_version=0.8.1
+packaging_version=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -31,6 +32,10 @@ Options:
     Use the given version of Storm (default: ${default_version} for a download or
     the version autodetected from project.clj or a VERSION file for local build).
 
+  -p, --packaging_version <packaging_version>
+    A suffix to add to the Debian package version. E.g. Storm version could be 0.8.1
+    and this could be 2, resulting in a Debian package version of 0.8.1-2.
+
 EOT
       exit 1
       ;;
@@ -49,6 +54,14 @@ EOT
       local_dir=$2
       if [ ! -d "${local_dir}" ]; then
         echo "Directory ${local_dir} does not exist" >&2
+        exit 1
+      fi
+      shift
+      ;;
+    -p|--packaging_version)
+      packaging_version=$2
+      if [[ ! "${packaging_version}" =~ ^[0-9]+$ ]]; then
+        echo "packaging_version must be a number" >&2
         exit 1
       fi
       shift
@@ -76,7 +89,6 @@ be used with any programming language, is used by many companies, and is a lot o
 url="http://storm-project.net"
 arch="all"
 section="misc"
-package_version=""
 
 set -x
 
@@ -154,10 +166,15 @@ cp ${origdir}/storm.yaml etc/storm
 cp ${origdir}/storm.log.properties etc/storm
 cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
 
+packaging_version_suffix=""
+if [ -n "${packaging_version}" ]; then
+  packaging_version_suffix="-${packaging_version}"
+fi
+
 #_ MAKE DEBIAN _#
 fpm -t deb \
     -n ${name} \
-    -v ${version} \
+    -v "${version}${packaging_version_suffix}" \
     --description "${description}" \
     --url="{$url}" \
     -a ${arch} \
