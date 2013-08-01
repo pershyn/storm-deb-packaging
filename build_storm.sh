@@ -163,6 +163,8 @@ fpm -t deb \
     -a ${arch} \
     --category ${section} \
     --vendor "" \
+    --deb-user "root" \
+    --deb-group "root" \
     -m "${USER}@localhost" \
     --prefix=/ \
     -d "libzmq0 = 2.1.7" -d "jzmq >= 2.1.0" -d "unzip" \
