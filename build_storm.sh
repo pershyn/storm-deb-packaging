@@ -9,6 +9,9 @@ default_local_dir="${origdir}/../storm"
 local_dir=''
 default_version=0.8.1
 packaging_version=""
+maintainer=""
+#use old debian init.d scripts or ubuntu upstart
+dist="ubuntu"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -35,6 +38,14 @@ Options:
   -p, --packaging_version <packaging_version>
     A suffix to add to the Debian package version. E.g. Storm version could be 0.8.1
     and this could be 2, resulting in a Debian package version of 0.8.1-2.
+
+  -m, --maintainer <maintainer_email>
+    Use maintainer email to include the data into package, 
+    if not provided - will be generated automatically from user name.
+  
+  --upstart 
+    builds package for ubuntu upstart, by default builds for debian init.d
+
 
 EOT
       exit 1
@@ -65,6 +76,14 @@ EOT
         exit 1
       fi
       shift
+      ;;
+    -m|--maintainer)
+      maintainer=%2
+      #if [[  ]]; then # TODO: add a check here for email
+      shift
+      ;;
+    --upstart)
+      dist="ubuntu" # by default builds for debian
       ;;
     *)
       echo "Unknown option $1" >&2
@@ -142,6 +161,11 @@ fi
 
 storm_root_dir=/usr/lib/storm
 
+# if maintainer parameter is not set - use default value 
+if [[ -z "${maintainer}" ]]; then
+  ${maintainer}="${USER}@localhost"
+fi
+
 #_ MAIN _#
 rm -rf ${name}*.deb
 mkdir -p tmp && pushd tmp
@@ -151,7 +175,11 @@ cd storm
 mkdir -p build${storm_root_dir}
 mkdir -p build/etc/default
 mkdir -p build/etc/storm
-mkdir -p build/etc/init
+if [ $dist == "debian" ]; then
+  mkdir -p build/etc/init.d
+else # ubuntu, etc - upstart based
+  mkdir -p build/etc/init
+fi
 mkdir -p build/var/log/storm
 
 unzip "${src_package}"
@@ -164,7 +192,11 @@ cd build
 cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
 cp ${origdir}/storm.yaml etc/storm
 cp ${origdir}/storm.log.properties etc/storm
-cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
+if [ $dist == "debian" ]; then
+  cp ${origdir}/init.d/storm-nimbus ${origdir}/init.d/storm-supervisor ${origdir}/init.d/storm-ui ${origdir}/init.d/storm-drpc etc/init.d
+else
+  cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
+fi 
 
 packaging_version_suffix=""
 if [ -n "${packaging_version}" ]; then
@@ -172,6 +204,7 @@ if [ -n "${packaging_version}" ]; then
 fi
 
 #_ MAKE DEBIAN _#
+# versions of libzmq and jzmq are from official storm installation guide.
 fpm -t deb \
     -n ${name} \
     -v "${version}${packaging_version_suffix}" \
@@ -182,12 +215,14 @@ fpm -t deb \
     --vendor "" \
     --deb-user "root" \
     --deb-group "root" \
-    -m "${USER}@localhost" \
+    -m ${maintainer} \
+    --before-install ${origdir}/before_install.sh \
+    --after-install ${origdir}/after_install.sh \
+    --after-remove ${origdir}/after_remove.sh \
     --prefix=/ \
-    -d "libzmq0 = 2.1.7" -d "jzmq >= 2.1.0" -d "unzip" \
+    -d "libzmq0 >= 2.1.7" -d "jzmq >= 2.1.0" -d "unzip" \
     -s dir \
     -- .
 
 mv storm*.deb ${origdir}
 popd
-

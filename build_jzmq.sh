@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
 set -u
-name=jzmq
+name=jzmq # jzmq left because this is how it is mentioned in official tested version for storm,
+# it probably can be changed to libjzmq later
 version=2.1.0-1
+libzmq_name=libzmq1 # to be compatible with
+libzmq_version=2.1.7
 description="JZMQ is the Java bindings for ZeroMQ"
 url="https://github.com/nathanmarz/jzmq"
 arch="$(dpkg --print-architecture)"
@@ -19,7 +22,7 @@ git clone https://github.com/nathanmarz/jzmq.git
 cd jzmq
 wget -O - https://github.com/nathanmarz/jzmq/pull/2.patch | patch -p1
 ./autogen.sh
-./configure --with-zeromq=${origdir}/tmp/libzmq0/build/usr/local
+./configure --with-zeromq=${origdir}/tmp/${libzmq_name}/build/usr/local
 make
 mkdir build
 make install DESTDIR=`pwd`/build
@@ -35,7 +38,7 @@ fpm -t deb \
     --vendor "" \
     -m "${USER}@localhost" \
     --prefix=/ \
-    -d "libzmq0 >= 2.1.7" \
+    -d "${libzmq_name} >= ${libzmq_version}" \
     --after-install ${origdir}/shlib.postinst \
     --after-remove ${origdir}/shlib.postuninst \
     -s dir \
