@@ -22,6 +22,7 @@ origdir="$(pwd)"
 # 
 export JAVA_HOME="$(readlink -f /usr/bin/javac | sed 's:/bin/javac::')"
 buildroot=build
+prefix="/usr"
 
 #_ MAIN _#
 rm -rf ${name}*.deb
@@ -43,6 +44,7 @@ wget -O - ${url}/2.patch | patch -p1 # apply patch TODO: checkout the patch and 
 #CLASSPATH=.:./.:$CLASSPATH javac -d . org/zeromq/ZMQ.java org/zeromq/App.java org/zeromq/ZMQForwarder.java org/zeromq/EmbeddedLibraryTools.java org/zeromq/ZMQQueue.java org/zeromq/ZMQStreamer.java org/zeromq/ZMQException.java
 #cd ..
 
+cd ..
 make
 mkdir build
 make install DESTDIR=${origdir}/${buildroot}

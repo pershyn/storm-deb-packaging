@@ -1,9 +1,25 @@
 #!/bin/bash
 set -e
 set -u
-name=libzmq0
+
+# build options
+fakeroot=libzmq0
+buildroot=build
+origdir=$(pwd)
+prefix="/usr"
+src_package="zeromq-${version}.tar.gz"
+download_url="http://download.zeromq.org/${src_package}"
+
+# package info
+
 version=2.1.7
+url="http://www.zeromq.org/"
+arch="$(dpkg --print-architecture)"
+section="misc"
+package_version=""
 description="The 0MQ lightweight messaging kernel is a library which extends the
+
+
 standard socket interfaces with features traditionally provided by
 specialised messaging middleware products. 0MQ sockets provide an
 abstraction of asynchronous message queues, multiple messaging
@@ -11,31 +27,35 @@ patterns, message filtering (subscriptions), seamless access to
 multiple transport protocols and more.
 .
 This package contains the ZeroMQ shared library."
-url="http://www.zeromq.org/"
-arch="$(dpkg --print-architecture)"
-section="misc"
-package_version=""
-src_package="zeromq-${version}.tar.gz"
-download_url="http://download.zeromq.org/${src_package}"
-origdir="$(pwd)"
 
-#_ MAIN _#
-rm -rf ${name}*.deb
+
+# install dependencies TODO: it should not be done here
+# apt-get install -y uuid-dev
+
+# download package
 if [[ ! -f "${src_package}" ]]; then
   wget ${download_url}
 fi
-mkdir -p tmp && pushd tmp
-rm -rf libzmq0
-tar -zxf "${origdir}/${src_package}"
-mv zeromq-${version} libzmq0
-cd libzmq0
-mkdir build
-./configure
+
+#_ MAIN _#
+rm -rf ${name}*.deb
+
+#_ MAKE DIRECTORIES _#
+rm -rf ${fakeroot}
+mkdir -p ${fakeroot}
+rm -rf ${buildroot}
+mkdir -p ${buildroot}
+#_ DOWNLOAD & COMPILE _#
+cd ${fakeroot}
+wget ${package}
+tar -zxvf *.gz
+cd zeromq-${version}/
+./configure --prefix=${prefix}
 make
-make install DESTDIR=`pwd`/build
+make install DESTDIR=${origdir}/${buildroot}
 
 #_ MAKE DEBIAN _#
-cd build
+cd ${origdir}/${buildroot}
 fpm -t deb \
     -n ${name} \
     -v ${version}${package_version} \
@@ -51,5 +71,5 @@ fpm -t deb \
     --after-remove ${origdir}/shlib.postuninst \
     -s dir \
     -- .
-mv libzmq0*.deb ${origdir}
+mv *.deb ${origdir}
 popd

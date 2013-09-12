@@ -21,7 +21,7 @@ be used with any programming language, is used by many companies, and is a lot o
 url="http://storm-project.net"
 arch="all"
 section="mics"
-
+prefix="/usr/lib"
 # Process command line
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -180,22 +180,25 @@ rm -rf ${fakeroot}/logs
 rm -rf ${fakeroot}/log4j
 rm -rf ${fakeroot}/conf
 
-#__MAKE_DIRECTORIES__#
+#_ MAKE DIRECTORIES _#
 rm -rf ${buildroot}
 mkdir -p ${buildroot}
-mkdir -p ${buildroot}/opt/storm
+mkdir -p ${buildroot}/${prefix}/storm
 mkdir -p ${buildroot}/etc/default
 mkdir -p ${buildroot}/etc/storm/conf.d
 mkdir -p ${buildroot}/etc/init
+mkdir -p ${buildroot}/etc/init.d
 mkdir -p ${buildroot}/var/log/storm
 mkdir -p ${buildroot}/var/lib/storm
 
 #_ COPY FILES _#
-cp -R ${fakeroot}/* ${buildroot}/opt/storm
+cp -Rv ${fakeroot}/* ${buildroot}/${prefix}/storm
 cp storm storm-nimbus storm-supervisor storm-ui storm-drpc ${buildroot}/etc/default
 cp storm.yaml ${buildroot}/etc/storm
 cp storm.log.properties ${buildroot}/etc/storm
 cp storm-nimbus.conf storm-supervisor.conf storm-ui.conf storm-drpc.conf ${buildroot}/etc/init
+#_ TODO: Symlinks for upstart init scripts 
+#for f in ${buildroot}/etc/init/*; do f=$(basename $f); f=${f%.conf}; ln -s /lib/init/upstart-job ${buildroot}/etc/init.d/$f; done
 
 if [ $dist == "debian" ]; then
   mkdir -p build/etc/init.d
@@ -203,8 +206,6 @@ else # ubuntu, etc - upstart based
   mkdir -p build/etc/init
 fi
 mkdir -p build/var/log/storm
-
-
 
 packaging_version_suffix=""
 if [ -n "${packaging_version}" ]; then

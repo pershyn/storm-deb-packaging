@@ -62,7 +62,7 @@ Storm Package
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/storm/
 
-Additions to the Fork 
+Changes
 ------
 Building jzmq can be a bit tricky, so I've forked the repo from phobos182 to add
 some trick fixers.
@@ -92,3 +92,12 @@ gem install fpm --no-ri --no-rdoc
 ```bash
 apt-get install -y openjdk-6-jdk pkg-config autoconf automake unzip
 ```
+
+Additions by wikimedia-incubator:
+---------------------------------
+
+- Now creates and runs as a storm user.
+- Symlinks /etc/init.d/storm-* services to /lib/init/upstart-job.
+- Fixes /etc/default and /etc/init shell variable naming bug.
+- Renames package name of libzmq0 to libzmq1 to match Ubuntu's.
+- Updated build scripts to work with newer versions of upstream packages.
