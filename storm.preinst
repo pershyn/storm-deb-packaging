@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+/usr/sbin/adduser --system --home=/usr/lib/storm --gecos=Storm --disabled-password --shell=/bin/bash --group storm
+
+#DEBHELPER#
+
+[ "$1" = "configure" ] && ldconfig
+
+exit 0

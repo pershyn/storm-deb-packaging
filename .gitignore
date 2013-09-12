@@ -1,5 +1,5 @@
-build/
-tmp
+downloads/
+tmp/
 *.changes
 *.deb
 *.dsc

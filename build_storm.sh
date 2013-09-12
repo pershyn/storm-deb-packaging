@@ -1,6 +1,6 @@
 #!/bin/bash
-set -e
 set -u
+set -x
 
 # build options and vars:
 do_download=''
@@ -8,6 +8,13 @@ origdir="$(pwd)"
 default_local_dir="${origdir}/../storm"
 local_dir=''
 dist="ubuntu" #use old debian init.d scripts or ubuntu upstart
+src_package="storm-${version}.zip"
+download_url="https://github.com/downloads/nathanmarz/storm/${src_package}"
+storm_home=/usr/lib/storm
+libzmq_name=libzmq1 # read README why name ZeroMQ library libzmq1
+libzmq_version=2.0.10 # read README why 2.0.10 should be used in dependencies
+jzmq_name=jzmq # read README why jzmq name is used as package name
+jzmq_version=2.1.0
 
 # package info:
 version=""
@@ -22,7 +29,8 @@ url="http://storm-project.net"
 arch="all"
 section="mics"
 prefix="/usr/lib"
-# Process command line
+
+#_ PROCESS CMD ARGUMENTS _#
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help)
@@ -56,7 +64,7 @@ Options:
   --upstart 
     builds package for ubuntu upstart, by default builds for debian init.d
 
-EOT
+EOT # TODO: Change defaults to ubuntu...?
       exit 1
       ;;
     -d|--download)
@@ -92,7 +100,7 @@ EOT
       shift
       ;;
     --upstart)
-      dist="ubuntu" # by default builds for debian
+      dist="ubuntu" # by default builds for debian TODO: Change?
       ;;
     *)
       echo "Unknown option $1" >&2
@@ -161,77 +169,83 @@ else
   fi
 fi
 
-storm_root_dir=/usr/lib/storm
-
 # if maintainer parameter is not set - use default value 
 if [[ -z "${maintainer}" ]]; then
   ${maintainer}="${USER}@localhost"
 fi
 
-#_ MAIN _#
-# do cleanup
-rm -rf ${name}*.deb
-rm -rf ${fakeroot}
-
-# prepare fakeroot - all storm files that will be packed to the package
-mkdir -p ${fakeroot}
-unzip -d ${fakeroot} ${src_package}
-rm -rf ${fakeroot}/logs
-rm -rf ${fakeroot}/log4j
-rm -rf ${fakeroot}/conf
-
-#_ MAKE DIRECTORIES _#
-rm -rf ${buildroot}
-mkdir -p ${buildroot}
-mkdir -p ${buildroot}/${prefix}/storm
-mkdir -p ${buildroot}/etc/default
-mkdir -p ${buildroot}/etc/storm/conf.d
-mkdir -p ${buildroot}/etc/init
-mkdir -p ${buildroot}/etc/init.d
-mkdir -p ${buildroot}/var/log/storm
-mkdir -p ${buildroot}/var/lib/storm
-
-#_ COPY FILES _#
-cp -Rv ${fakeroot}/* ${buildroot}/${prefix}/storm
-cp storm storm-nimbus storm-supervisor storm-ui storm-drpc ${buildroot}/etc/default
-cp storm.yaml ${buildroot}/etc/storm
-cp storm.log.properties ${buildroot}/etc/storm
-cp storm-nimbus.conf storm-supervisor.conf storm-ui.conf storm-drpc.conf ${buildroot}/etc/init
-#_ TODO: Symlinks for upstart init scripts 
-#for f in ${buildroot}/etc/init/*; do f=$(basename $f); f=${f%.conf}; ln -s /lib/init/upstart-job ${buildroot}/etc/init.d/$f; done
-
-if [ $dist == "debian" ]; then
-  mkdir -p build/etc/init.d
-else # ubuntu, etc - upstart based
-  mkdir -p build/etc/init
-fi
-mkdir -p build/var/log/storm
-
+# set packaging version suffix if provided
 packaging_version_suffix=""
 if [ -n "${packaging_version}" ]; then
   packaging_version_suffix="-${packaging_version}"
 fi
 
+#_ MAIN _#
+# Cleanup old debian files
+rm -rf ${name}*.deb
+# If temp directory exists, remove it
+if [ -d tmp ]; then
+  rm -rf tmp
+fi
+
+# Make build directory, save location
+mkdir -p tmp && pushd tmp
+# Create build structure for package
+mkdir -p storm
+cd storm
+mkdir -p build${storm_home}
+mkdir -p build/etc/default
+mkdir -p build/etc/storm
+#mkdir -p build/etc/init # see below
+#mkdir -p build/etc/init.d
+mkdir -p build/var/log/storm
+
+## Optionally instaed of creating 2 folders, create only desired
+if [ $dist == "debian" ]; then
+  mkdir -p build/etc/init.d
+else # ubuntu, etc - upstart based
+  mkdir -p build/etc/init
+fi
+
+# Explode downloaded archive & cleanup files
+unzip ${downloads}/storm-${version}.zip
+rm -rf storm-${version}/logs
+rm -rf storm-${version}/log4j
+rm -rf storm-${version}/conf
+cp -R storm-${version}/* build${storm_home}
+
+# Substitue default files provided with storm sources
+cd build
+cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
+cp ${origdir}/storm.yaml etc/storm
+cp ${origdir}/storm.log.properties etc/storm
+
+# TODO: this copies files for ubuntu... Copy init scripts for Debian?
+cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
+#_ TODO: Check symlinks for upstart init scripts 
+#for f in ${buildroot}/etc/init/*; do f=$(basename $f); f=${f%.conf}; ln -s /lib/init/upstart-job ${buildroot}/etc/init.d/$f; done
+
 #_ MAKE DEBIAN _#
 # versions of libzmq and jzmq are from official storm installation guide.
+# TODO: Check def-user, deb-roup
 fpm -t deb \
     -n ${name} \
     -v "${version}${packaging_version_suffix}" \
     --description "${description}" \
-    --url="{$url}" \
-    -a ${arch} \
     --category ${section} \
+    --url="{$url}" \
     --vendor "" \
     --deb-user "root" \
     --deb-group "root" \
     -m ${maintainer} \
-    --before-install ${origdir}/before_install.sh \
-    --after-install ${origdir}/after_install.sh \
-    --after-remove ${origdir}/after_remove.sh \
+    --before-install ${origdir}/storm.preinst \
+    --after-install ${origdir}/storm.postinst \
+    --after-remove ${origdir}/storm.postrm \
+    -a ${arch} \
     --prefix=/ \
-    -d "libzmq0 >= 2.1.7" -d "jzmq >= 2.1.0" -d "unzip" \
+    -d "${libzmq_name} >= ${libzmq_version}" -d "${jzmq_name} >= ${jzmq_version}" -d "unzip" \
     -s dir \
     -- .
 
-mv storm*.deb ${origdir}
+mv ${name}*.deb ${origdir}
 popd

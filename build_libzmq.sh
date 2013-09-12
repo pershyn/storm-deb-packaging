@@ -1,11 +1,16 @@
 #!/bin/bash
-set -e
+# downloads and builds debian package for libzmq library
+# ./tmp/ folder is used as temporary build place
+# ./downloads/ is used as place to store downloaded files,
+# so if needed the sources could be downloaded once.
+
 set -u
+set -x
 
 # build options
-fakeroot=libzmq0
 buildroot=build
 origdir=$(pwd)
+downloads="${origdir}/downloads"
 prefix="/usr"
 src_package="zeromq-${version}.tar.gz"
 download_url="http://download.zeromq.org/${src_package}"
@@ -16,60 +21,56 @@ version=2.1.7
 url="http://www.zeromq.org/"
 arch="$(dpkg --print-architecture)"
 section="misc"
-package_version=""
+package_version_suffix="" # e.g. use -2 to add it to package version
 description="The 0MQ lightweight messaging kernel is a library which extends the
-
-
-standard socket interfaces with features traditionally provided by
-specialised messaging middleware products. 0MQ sockets provide an
-abstraction of asynchronous message queues, multiple messaging
-patterns, message filtering (subscriptions), seamless access to
-multiple transport protocols and more.
-.
-This package contains the ZeroMQ shared library."
-
-
-# install dependencies TODO: it should not be done here
-# apt-get install -y uuid-dev
+    standard socket interfaces with features traditionally provided by
+    specialised messaging middleware products. 0MQ sockets provide an
+    abstraction of asynchronous message queues, multiple messaging
+    patterns, message filtering (subscriptions), seamless access to
+    multiple transport protocols and more.
+    .
+    This package contains the ZeroMQ shared library."
 
 # download package
-if [[ ! -f "${src_package}" ]]; then
-  wget ${download_url}
+if [[ ! -f "${downloads}/${src_package}" ]]; then
+#  wget ${download_url}
+  curl -L -s -o ${src_package} ${download_url}
 fi
 
 #_ MAIN _#
 rm -rf ${name}*.deb
-
-#_ MAKE DIRECTORIES _#
-rm -rf ${fakeroot}
-mkdir -p ${fakeroot}
-rm -rf ${buildroot}
-mkdir -p ${buildroot}
-#_ DOWNLOAD & COMPILE _#
-cd ${fakeroot}
-wget ${package}
-tar -zxvf *.gz
+# If temp directory exists, remove if
+if [ -d tmp ]; then
+  rm -rf tmp
+fi
+# Make build directory, save location
+mkdir -p tmp && pushd tmp
+#_ Unpack and compile _#
+tar -zxf ${downloads}${src_package}
 cd zeromq-${version}/
 ./configure --prefix=${prefix}
+
 make
-make install DESTDIR=${origdir}/${buildroot}
+if [ $? != 0 ]; then
+  echo "Failed to build ${name}. Please ensure all dependencies are installed."
+  exit $?
+fi
+make install DESTDIR=`pwd`/build
 
 #_ MAKE DEBIAN _#
-cd ${origdir}/${buildroot}
+cd build
 fpm -t deb \
     -n ${name} \
-    -v ${version}${package_version} \
+    -v ${version}${package_version_suffix} \
     --description "${description}" \
     --url="${url}" \
     -a ${arch} \
     --category ${section} \
-    --vendor "" \
-    -m "${USER}@localhost" \
     --prefix=/ \
-    -d "libc6 >= 2.7" -d "libgcc1 >= 1:4.1.1" -d "libstdc++6 >= 4.1.1" -d "libuuid1 >= 2.16" \
+    -d 'libc6 >= 2.7'  -d 'libgcc1 >= 1:4.1.1'  -d 'libstdc++6 >= 4.1.1'  -d 'libuuid1 >= 2.16' \
     --after-install ${origdir}/shlib.postinst \
-    --after-remove ${origdir}/shlib.postuninst \
+    --after-remove ${origdir}/shlib.postrm \
     -s dir \
-    -- .
-mv *.deb ${origdir}
+     -- .
+mv ${name}*.deb ${origdir}
 popd

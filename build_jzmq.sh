@@ -1,58 +1,74 @@
 #!/bin/bash
-set -e
-set -u
+# downloads and builds debian package for jzmq library
+# ./tmp/ folder is used as temporary build place
+# ./downloads/ is used as place to store downloaded files,
+# so if needed the sources could be downloaded once.
 
-name=jzmq # jzmq left because this is how it is mentioned in official tested version for storm,
-# it probably can be changed to libjzmq later
-version=2.1.0-1
-libzmq_name=libzmq1 # to be compatible with libzmq1 in debian repos
-libzmq_version=2.1.7
+set -u
+set -x
+
+name=jzmq # read README why jzmq name is used as package name
+version=2.1.0
+libzmq_name=libzmq1 # read README why name ZeroMQ library libzmq1
+libzmq_version=2.0.10 # read README why 2.0.10 should be used in dependencies
 description="JZMQ is the Java bindings for ZeroMQ"
 url="https://github.com/nathanmarz/jzmq.git"
-arch="$(dpkg --print-architecture)"
+arch="all" # read README why all is used here
 section="misc"
-package_version=""
+package_version_suffix="" # use -2 to add it to package version
 origdir="$(pwd)"
-
-# TODO: checkout the JAVA_HOME autoset.
-#if [ "${JAVA_HOME}x" == "x" ]; then
-#  echo Please set JAVA_HOME before running.
-#  exit -1
-#fi
-# 
-export JAVA_HOME="$(readlink -f /usr/bin/javac | sed 's:/bin/javac::')"
-buildroot=build
 prefix="/usr"
+downloads="${origdir}/downloads"
+
+# download and patch the jzmq (if needed) to downloads
+mkdir -p "${downloads}/jzmq" && pushd "${downloads}/jzmq"
+  git clone https://github.com/nathanmarz/jzmq.git
+  cd jzmq
+  mkdir -p build
+
+  # Patch for 12.x Ubuntu releases
+  # TODO: Check - if you are building for debian - this patch is not needed
+  if [ $(cat /etc/lsb-release|grep -i release|grep 12\.) ]; then
+    curl -L -v -s https://github.com/nathanmarz/jzmq/pull/2.patch 2>/dev/null | patch -p
+  fi
+popd
+
+# Make sure JAVA_HOME is set.
+if [ "${JAVA_HOME}x" == "x" ]; then
+  echo Please set JAVA_HOME before running.
+  exit -1
+fi
 
 #_ MAIN _#
+# Cleanup old debian files
 rm -rf ${name}*.deb
+# If temp directory exists, remove if
+if [ -d tmp ]; then
+  rm -rf tmp
+fi
+# Make build directory, save location
 mkdir -p tmp && pushd tmp
-rm -rf jzmq
-rm -rf ${buildroot}
 
-mkdir -p ${buildroot}
-git clone ${url}
-cd jzmq
+# copy downloaded repo to the tmp dir
+cp ${downloads}/jzmq/* tmp
 
-wget -O - ${url}/2.patch | patch -p1 # apply patch TODO: checkout the patch and comment.
+# Build package
 ./autogen.sh
-./configure --with-zeromq=${origdir}/tmp/${libzmq_name}/build/usr/local
+./configure --prefix=${prefix} #TODO: what is this prefix?
+# old prefix  "--with-zeromq=${origdir}/tmp/${libzmq_name}/build/usr/local"
 
-# TODO: What is that?
-#cd src/
-#touch classdist_noinst.stamp
-#CLASSPATH=.:./.:$CLASSPATH javac -d . org/zeromq/ZMQ.java org/zeromq/App.java org/zeromq/ZMQForwarder.java org/zeromq/EmbeddedLibraryTools.java org/zeromq/ZMQQueue.java org/zeromq/ZMQStreamer.java org/zeromq/ZMQException.java
-#cd ..
-
-cd ..
 make
-mkdir build
-make install DESTDIR=${origdir}/${buildroot}
+if [ $? != 0 ]; then
+  echo "Failed to build ${name}. Please ensure all dependencies are installed"
+  exit $?
+fi
 
-cd build
+make install DESTDIR='pwd'/build
+
+#_ MAKE DEBIAN _#
 fpm -t deb \
     -n ${name} \
-    -v ${version}${package_version} \
+    -v ${version}${package_version_suffix} \
     --description "${description}" \
     --url="${url}" \
     -a ${arch} \
@@ -61,9 +77,10 @@ fpm -t deb \
     -m "${USER}@localhost" \
     --prefix=/ \
     -d "${libzmq_name} >= ${libzmq_version}" \
-    --after-install ${origdir}/shlib.postinst \
-    --after-remove ${origdir}/shlib.postuninst \
     -s dir \
+    --after-install ${origdir}/shlib.postinst \
+    --after-remove ${origdir}/shlib.postrm \
     -- .
-mv ${origdir}/${buildroot}/*.deb ${origdir}
+
+mv ${name}*.deb ${origdir}
 popd

@@ -3,9 +3,54 @@ Storm Debian Packaging
 
 Build scripts / sample configuration for building a Storm .deb with FPM
 
+Supported:
+
+* Storm 0.8.1 and 0.8.2
+* 
+
+General:
+-------------
+Storm 0.8.1 and 0.8.2 [was tested](https://github.com/nathanmarz/storm/wiki/Installing-native-dependencies) on EXACT version of libraries (ZeroMQ 2.1.7, jzmq 2.1.0-SNAPSHOT)
+
+### zeromq ###
+Due to specific development model [that zmq uses](http://zeromq.org/area:faq), 
+library package for ZeroMQ ended up having several names:
+
+* libzmq0 - for really really old versions (apparently 2.0.* is still libzmq0)
+* libzmq1 - for versions > 2.1.10 
+* libzmq3 - for versions 3.*.
+
+libzmq is GPLed, so the package is in [debian repos](http://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libzmq).
+So, what package to use on your own risk? :)
+
+* if latest stable libzmq1 needed -> libzmq1 from debian repos.
+* if latest stable libzmq3 needed -> libzmq3 from debian repos.
+* if specific libzmq1 needed (either recommended 2.1.7 or other) -> use provided scripts and fpf scripts to build it.
+
+### jzmq ###
+There may be a confusion how to name this package (_libjzmq_ or _jzmq_):
+While this might be a matter of taste, in code the jzmq is used because in source codes of frozen version (jzmq 2.1.0-SNAPSHOT):
+
+* Project originally is named "jzmq"
+* project files are libjzmq.so, libjzmq.dylib, libjzmq.dll (_this is where another option comes from_)
+* Project Artifact ID from [pom.xml](https://github.com/nathanmarz/jzmq/blob/master/pom.xml) is __jzmq__
+* The jzmq project under LGPL, so it will probably will make it way to official debian repos with this name.
+* with the project there is a suite to build a package for debian, <br> and in this suite in _./debian/control_ there is next information:
+    * package: jzmq
+    * Architecture: any
+    * Depends: libzmq0 (>= 2.0.10), ${shlibs:Depends}, ${misc:Depends}
+
+The bad thing is that this frozen version originally depends on libzmq0,
+so it makes sence to change the dependency to libzmq1 >= 2.0.10 becase this package and suite is intended to be used with storm.
+In upstream of jzmq development this change has been made already and now [using libzmq1 as dependency](https://github.com/zeromq/jzmq/commit/4e24e63c4d4b9fc2a441ce90e9581aaca0cdeafd) , so if you build a new package with newest version - it will be integrated nicely.
+
+Also it gives the user an opportunity to update to newer version of ZeroMQ (e.g. 2.2.0) without updating to the new version of bindings, 
+
+The 2.1.7 version of ZeroMQ library that is build using this scripts is named libzmq1.
+
 Requirements
 ------------
-To make it as pain free as possible, I have used FPM to build the debian packaging. You can install it by via rubygems (gem install -r fpm). The build_storm.sh script will setup a target directory with the format required for FPM to turn a directory into a .deb package. As a bonus, if you want to change the structure of the package, just change the script to modify the target directory. Then issue the FPM build command, and you are good to go.
+To make it as pain free as possible, FPM is used to build the debian package. You can install it by via rubygems (gem install -r fpm). The build_storm.sh script will setup a target directory with the format required for FPM to turn a directory into a .deb package. As a bonus, if you want to change the structure of the package, just change the script to modify the target directory. Then issue the FPM build command, and you are good to go.
 
 * FPM (<https://github.com/jordansissel/fpm/>)
 * WGet
@@ -25,42 +70,13 @@ Just run the build scripts, and debian artifacts will be created.
 
 Here is a sample of the layout of the package structures.
 
+Updates
+------
+7/11/2013 - Updated Packaging paths / guidelines based on forks. Tested on 0.8.1 on 11.04 + 12.04
+
 Storm Package
 ------
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./opt/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./opt/storm/
-    -rw-r--r-- root/root     12653 2012-08-02 18:10 ./opt/storm/CHANGELOG.md
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./opt/storm/lib/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./opt/storm/public/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./opt/storm/public/css/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./opt/storm/public/js/
-    -rw-r--r-- root/root      2794 2012-08-02 18:10 ./opt/storm/README.markdown
-    -rw-r--r-- root/root     12710 2012-08-02 18:10 ./opt/storm/LICENSE.html
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./opt/storm/bin/
-    -rw-r--r-- root/root   3896683 2012-08-02 18:10 ./opt/storm/storm-0.7.4.jar
-    -rw-r--r-- root/root         6 2012-08-02 18:10 ./opt/storm/RELEASE
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./etc/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./etc/default/
-    -rw-r--r-- root/root       387 2012-08-02 18:10 ./etc/default/storm
-    -rw-r--r-- root/root       166 2012-08-02 18:10 ./etc/default/storm-nimbus
-    -rw-r--r-- root/root       184 2012-08-02 18:10 ./etc/default/storm-supervisor
-    -rw-r--r-- root/root       160 2012-08-02 18:10 ./etc/default/storm-drpc
-    -rw-r--r-- root/root       150 2012-08-02 18:10 ./etc/default/storm-ui
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./etc/storm/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./etc/storm/conf.d/
-    -rw-r--r-- root/root       364 2012-08-02 18:10 ./etc/storm/storm.log.properties
-    -rw-r--r-- root/root       445 2012-08-02 18:10 ./etc/storm/storm.yaml
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./etc/init/
-    -rw-r--r-- root/root       774 2012-08-02 18:10 ./etc/init/storm-drpc.conf
-    -rw-r--r-- root/root       757 2012-08-02 18:10 ./etc/init/storm-ui.conf
-    -rw-r--r-- root/root       816 2012-08-02 18:10 ./etc/init/storm-supervisor.conf
-    -rw-r--r-- root/root       788 2012-08-02 18:10 ./etc/init/storm-nimbus.conf
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/lib/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/lib/storm/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/
-    drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/storm/
+TODO: Add final view
 
 Changes
 ------
@@ -101,3 +117,4 @@ Additions by wikimedia-incubator:
 - Fixes /etc/default and /etc/init shell variable naming bug.
 - Renames package name of libzmq0 to libzmq1 to match Ubuntu's.
 - Updated build scripts to work with newer versions of upstream packages.
+
