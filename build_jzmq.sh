@@ -21,16 +21,19 @@ prefix="/usr"
 downloads="${origdir}/downloads"
 
 # download and patch the jzmq (if needed) to downloads
-mkdir -p "${downloads}/jzmq" && pushd "${downloads}/jzmq"
-  git clone https://github.com/nathanmarz/jzmq.git
-  cd jzmq
-  mkdir -p build
+mkdir -p ${downloads} && pushd ${downloads}
 
-  # Patch for 12.x Ubuntu releases
-  # TODO: Check - if you are building for debian - this patch is not needed
+ # do not clone if folder exists
+ if [[ ! -d "${downloads}/${name}" ]]; then
+  git clone https://github.com/nathanmarz/jzmq.git
+  
+  # Patch for being able to build the jzmq under Ubuntu 12.x releases
   if [ $(cat /etc/lsb-release|grep -i release|grep 12\.) ]; then
-    curl -L -v -s https://github.com/nathanmarz/jzmq/pull/2.patch 2>/dev/null | patch -p
+    cd jzmq
+    wget -O - https://github.com/nathanmarz/jzmq/pull/2.patch | patch -p1
+    #curl -L -v -s https://github.com/nathanmarz/jzmq/pull/2.patch 2>/dev/null | patch -p
   fi
+ fi
 popd
 
 # Make sure JAVA_HOME is set.
@@ -42,7 +45,7 @@ fi
 #_ MAIN _#
 # Cleanup old debian files
 rm -rf ${name}*.deb
-# If temp directory exists, remove if
+# If temp directory exists, remove it
 if [ -d tmp ]; then
   rm -rf tmp
 fi
@@ -50,7 +53,7 @@ fi
 mkdir -p tmp && pushd tmp
 
 # copy downloaded repo to the tmp dir
-cp ${downloads}/jzmq/* tmp
+cp -r ${downloads}/${name}/* .
 
 # Build package
 ./autogen.sh
@@ -63,6 +66,7 @@ if [ $? != 0 ]; then
   exit $?
 fi
 
+mkdir build
 make install DESTDIR='pwd'/build
 
 #_ MAKE DEBIAN _#

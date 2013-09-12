@@ -24,20 +24,19 @@ description="The 0MQ lightweight messaging kernel is a library which extends the
     This package contains the ZeroMQ shared library."
 
 # build options
-buildroot=build
 origdir=$(pwd)
 downloads="${origdir}/downloads"
 prefix="/usr"
 src_package="zeromq-${version}.tar.gz"
 download_url="http://download.zeromq.org/${src_package}"
 
-mkdir -p ${downloads}
-
-# download package (comment if not needed to download)
-if [[ ! -f "${downloads}/${src_package}" ]]; then
-# wget ${download_url}
-  curl -L -s -o ${downloads}/${src_package} ${download_url}
-fi
+mkdir -p ${downloads} && pushd ${downloads}
+  # download package (comment if not needed to download)
+  if [[ ! -f "${downloads}/${src_package}" ]]; then
+  # wget ${download_url}
+    curl -L -s -o ${downloads}/${src_package} ${download_url}
+  fi
+popd
 
 #_ MAIN _#
 rm -rf ${name}*.deb
