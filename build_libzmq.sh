@@ -31,9 +31,8 @@ src_package="zeromq-${version}.tar.gz"
 download_url="http://download.zeromq.org/${src_package}"
 
 mkdir -p ${downloads} && pushd ${downloads}
-  # download package (comment if not needed to download)
+  # download package (if not exists in folder)
   if [[ ! -f "${downloads}/${src_package}" ]]; then
-  # wget ${download_url}
     curl -L -s -o ${downloads}/${src_package} ${download_url}
   fi
 popd
