@@ -61,3 +61,34 @@ Storm Package
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/lib/storm/
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/
     drwxr-xr-x root/root         0 2012-08-02 18:10 ./var/log/storm/
+
+Additions to the Fork 
+------
+Building jzmq can be a bit tricky, so I've forked the repo from phobos182 to add
+some trick fixers.
+
+1. After building zeromq, I couldn't get `--with-zeromq` to work when building
+   `jzmq`, so I ended up running `sudo make install` in `libzmq0` to install the
+   files in a well-known place in the system. This seems to be an issue with the
+   include path but I didn't have the patience to figure it out.
+1. I modified `build_jzmq.sh` to do a little dancing to touch a timestamp file
+   and build some java classes.
+1. I bumped the `storm` version to `0.8.1` because that's what I needed to use.
+
+Building on Ubuntu
+-----
+I run servers on Ubuntu, so here are the packages and gem I needed to install to
+see a clean build of ZeroMQ, jzmq and Storm.
+
+* **libzmq0**
+
+```bash
+apt-get install -y git g++ uuid-dev ruby1.9.3 make
+gem install fpm --no-ri --no-rdoc
+```
+
+* **jzmq**
+
+```bash
+apt-get install -y openjdk-6-jdk pkg-config autoconf automake unzip
+```

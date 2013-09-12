@@ -2,17 +2,27 @@
 set -e
 set -u
 
+# build options and vars:
 do_download=''
-version=''
 origdir="$(pwd)"
 default_local_dir="${origdir}/../storm"
 local_dir=''
-default_version=0.8.1
-packaging_version=""
-maintainer=""
-#use old debian init.d scripts or ubuntu upstart
-dist="ubuntu"
+dist="ubuntu" #use old debian init.d scripts or ubuntu upstart
 
+# package info:
+version=""
+packaging_version=""
+default_version=0.8.1
+maintainer=""
+name=storm
+description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
+for doing batch processing, Storm provides a set of general primitives for doing realtime computation. Storm is simple, can
+be used with any programming language, is used by many companies, and is a lot of fun to use!"
+url="http://storm-project.net"
+arch="all"
+section="mics"
+
+# Process command line
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help)
@@ -45,7 +55,6 @@ Options:
   
   --upstart 
     builds package for ubuntu upstart, by default builds for debian init.d
-
 
 EOT
       exit 1
@@ -101,13 +110,6 @@ if [ -z "${local_dir}" ]; then
   local_dir=${default_local_dir}
 fi
 
-name=storm
-description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
-for doing batch processing, Storm provides a set of general primitives for doing realtime computation. Storm is simple, can
-be used with any programming language, is used by many companies, and is a lot of fun to use!"
-url="http://storm-project.net"
-arch="all"
-section="misc"
 
 set -x
 
@@ -167,14 +169,34 @@ if [[ -z "${maintainer}" ]]; then
 fi
 
 #_ MAIN _#
+# do cleanup
 rm -rf ${name}*.deb
-mkdir -p tmp && pushd tmp
-rm -rf storm
-mkdir -p storm
-cd storm
-mkdir -p build${storm_root_dir}
-mkdir -p build/etc/default
-mkdir -p build/etc/storm
+rm -rf ${fakeroot}
+
+# prepare fakeroot - all storm files that will be packed to the package
+mkdir -p ${fakeroot}
+unzip -d ${fakeroot} ${src_package}
+rm -rf ${fakeroot}/logs
+rm -rf ${fakeroot}/log4j
+rm -rf ${fakeroot}/conf
+
+#__MAKE_DIRECTORIES__#
+rm -rf ${buildroot}
+mkdir -p ${buildroot}
+mkdir -p ${buildroot}/opt/storm
+mkdir -p ${buildroot}/etc/default
+mkdir -p ${buildroot}/etc/storm/conf.d
+mkdir -p ${buildroot}/etc/init
+mkdir -p ${buildroot}/var/log/storm
+mkdir -p ${buildroot}/var/lib/storm
+
+#_ COPY FILES _#
+cp -R ${fakeroot}/* ${buildroot}/opt/storm
+cp storm storm-nimbus storm-supervisor storm-ui storm-drpc ${buildroot}/etc/default
+cp storm.yaml ${buildroot}/etc/storm
+cp storm.log.properties ${buildroot}/etc/storm
+cp storm-nimbus.conf storm-supervisor.conf storm-ui.conf storm-drpc.conf ${buildroot}/etc/init
+
 if [ $dist == "debian" ]; then
   mkdir -p build/etc/init.d
 else # ubuntu, etc - upstart based
@@ -182,21 +204,7 @@ else # ubuntu, etc - upstart based
 fi
 mkdir -p build/var/log/storm
 
-unzip "${src_package}"
-rm -rf storm-${version}/logs
-rm -rf storm-${version}/log4j
-rm -rf storm-${version}/conf
-cp -R storm-${version}/* build${storm_root_dir}
 
-cd build
-cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
-cp ${origdir}/storm.yaml etc/storm
-cp ${origdir}/storm.log.properties etc/storm
-if [ $dist == "debian" ]; then
-  cp ${origdir}/init.d/storm-nimbus ${origdir}/init.d/storm-supervisor ${origdir}/init.d/storm-ui ${origdir}/init.d/storm-drpc etc/init.d
-else
-  cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
-fi 
 
 packaging_version_suffix=""
 if [ -n "${packaging_version}" ]; then
