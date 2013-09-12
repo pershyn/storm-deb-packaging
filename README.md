@@ -25,17 +25,17 @@ So, what package to use on your own risk? :)
 
 * if latest stable libzmq1 needed -> libzmq1 from debian repos.
 * if latest stable libzmq3 needed -> libzmq3 from debian repos.
-* if specific libzmq1 needed (either recommended 2.1.7 or other) -> use provided scripts and fpf scripts to build it.
+* if specific libzmq1 needed (either recommended 2.1.7 or other) -> use provided scripts and fpm scripts to build it.
 
 ### jzmq ###
-There may be a confusion how to name this package (_libjzmq_ or _jzmq_):
+There may be a confusion how to name this package ( _libjzmq_ or _jzmq_):
 While this might be a matter of taste, in code the jzmq is used because in source codes of frozen version (jzmq 2.1.0-SNAPSHOT):
 
 * Project originally is named "jzmq"
-* project files are libjzmq.so, libjzmq.dylib, libjzmq.dll (_this is where another option comes from_)
+* project files are libjzmq.so, libjzmq.dylib, libjzmq.dll ( _this is where another option comes from_ )
 * Project Artifact ID from [pom.xml](https://github.com/nathanmarz/jzmq/blob/master/pom.xml) is __jzmq__
 * The jzmq project under LGPL, so it will probably will make it way to official debian repos with this name.
-* with the project there is a suite to build a package for debian, <br> and in this suite in _./debian/control_ there is next information:
+* with the project there is a suite to build a package for debian, <br> and in this suite ( _./debian/control_ ) is next information:
     * package: jzmq
     * Architecture: any
     * Depends: libzmq0 (>= 2.0.10), ${shlibs:Depends}, ${misc:Depends}
@@ -46,7 +46,7 @@ In upstream of jzmq development this change has been made already and now [using
 
 Also it gives the user an opportunity to update to newer version of ZeroMQ (e.g. 2.2.0) without updating to the new version of bindings, 
 
-The 2.1.7 version of ZeroMQ library that is build using this scripts is named libzmq1.
+So, by default the 2.1.7 version of ZeroMQ library that is build using these scripts is named libzmq1.
 
 Requirements
 ------------

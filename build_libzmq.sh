@@ -7,19 +7,11 @@
 set -u
 set -x
 
-# build options
-buildroot=build
-origdir=$(pwd)
-downloads="${origdir}/downloads"
-prefix="/usr"
-src_package="zeromq-${version}.tar.gz"
-download_url="http://download.zeromq.org/${src_package}"
-
 # package info
-
-version=2.1.7
+name=libzmq1 # read README why name ZeroMQ library libzmq1
+version=2.1.7 # read README why at least 2.1.7 should be used in dependencies
 url="http://www.zeromq.org/"
-arch="$(dpkg --print-architecture)"
+arch=$(dpkg --print-architecture)
 section="misc"
 package_version_suffix="" # e.g. use -2 to add it to package version
 description="The 0MQ lightweight messaging kernel is a library which extends the
@@ -31,10 +23,20 @@ description="The 0MQ lightweight messaging kernel is a library which extends the
     .
     This package contains the ZeroMQ shared library."
 
-# download package
+# build options
+buildroot=build
+origdir=$(pwd)
+downloads="${origdir}/downloads"
+prefix="/usr"
+src_package="zeromq-${version}.tar.gz"
+download_url="http://download.zeromq.org/${src_package}"
+
+mkdir -p ${downloads}
+
+# download package (comment if not needed to download)
 if [[ ! -f "${downloads}/${src_package}" ]]; then
-#  wget ${download_url}
-  curl -L -s -o ${src_package} ${download_url}
+# wget ${download_url}
+  curl -L -s -o ${downloads}/${src_package} ${download_url}
 fi
 
 #_ MAIN _#
@@ -46,7 +48,7 @@ fi
 # Make build directory, save location
 mkdir -p tmp && pushd tmp
 #_ Unpack and compile _#
-tar -zxf ${downloads}${src_package}
+tar -zxf ${downloads}/${src_package}
 cd zeromq-${version}/
 ./configure --prefix=${prefix}
 
@@ -71,6 +73,7 @@ fpm -t deb \
     --after-install ${origdir}/shlib.postinst \
     --after-remove ${origdir}/shlib.postrm \
     -s dir \
-     -- .
+    -- .
+
 mv ${name}*.deb ${origdir}
 popd
