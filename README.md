@@ -3,10 +3,39 @@ Storm Debian Packaging
 
 Build scripts / sample configuration for building a Storm .deb with FPM
 
-Supported:
+Interesting tutorial how to install storm on .rpm based distibution: [Running multi-node storm cluster by Michael Noll](http://www.michael-noll.com/tutorials/running-multi-node-storm-cluster/)
 
-* Storm 0.8.1 and 0.8.2
-* 
+Compatibity:
+-------------------
+
+* Storm 0.8.1 - supported
+* Storm 0.8.2 - planned to be supported
+* Debian Squeeze - supported
+* Debian Wheezy - planned to be supported
+* Ubuntu 12.04 - planned to be supported
+
+storm.local.dir is set to be /usr/lib/storm
+(also possible /app/storm, /usr/local/storm)
+ 
+Things to look up, fix:
+--------------------------------
+
+Dependencies:
+
+* uuid-dev
+* unzip for build-time, but for run time?
+
+Other things:
+
+* ownership of /usr/lib/storm is storm (but for rest system parts in there is root...) if we use root here, then storm cannot write to its home folder.
+* package behaviour when home folder exists.
+* libzmq*.so files executable permission by default (and jzmq)
+* add a note on folder structure of build system
+* add a note - all the build process is done in tmp directory
+* support passing maintainer parameter
+* add intended use note
+* add a note on storm user home (/opt vs /usr/local/storm vs /usr/lib/storm), link to fil
+* https://wiki.debian.org/MaintainerScripts
 
 General:
 -------------
@@ -48,7 +77,7 @@ Also it gives the user an opportunity to update to newer version of ZeroMQ (e.g.
 
 So, by default the 2.1.7 version of ZeroMQ library that is build using these scripts is named libzmq1.
 
-Requirements
+Build-time requirements:
 ------------
 To make it as pain free as possible, FPM is used to build the debian package. You can install it by via rubygems (gem install -r fpm). The build_storm.sh script will setup a target directory with the format required for FPM to turn a directory into a .deb package. As a bonus, if you want to change the structure of the package, just change the script to modify the target directory. Then issue the FPM build command, and you are good to go.
 
@@ -62,20 +91,17 @@ Usage
 -----
 Included are three scripts to build the debian packages for a storm installation.
 
-* build_storm.sh - Storm
-* build_libzmq0.sh - ZeroMQ libraries
-* build_jzmq0.sh - Java bindings for ZeroMQ
+* ./build_storm.sh - Storm
+* ./build_libzmq.sh - ZeroMQ libraries
+* ./build_jzmq.sh - Java bindings for ZeroMQ
 
 Just run the build scripts, and debian artifacts will be created.
 
-Here is a sample of the layout of the package structures.
-
-Updates
-------
-7/11/2013 - Updated Packaging paths / guidelines based on forks. Tested on 0.8.1 on 11.04 + 12.04
-
 Storm Package
 ------
+
+Here is a sample of the layout of the package structures.
+
 TODO: Add final view
 
 Changes
@@ -118,6 +144,9 @@ Additions by wikimedia-incubator:
 - Renames package name of libzmq0 to libzmq1 to match Ubuntu's.
 - Updated build scripts to work with newer versions of upstream packages.
 
+-------------------------
+
+7/11/2013 - Updated Packaging paths / guidelines based on forks. Tested on 0.8.1 on 11.04 + 12.04
 
 -------------------------
 

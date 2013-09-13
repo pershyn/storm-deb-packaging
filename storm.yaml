@@ -7,7 +7,10 @@
 # 
 # 
 # ##### These may optionally be filled in:
-#    
+## ui.* configs are for the master
+# ui.port: 8080
+# ui.childopts: "-Xmx768m"    
+#
 ## List of custom serializations
 # topology.kryo.register:
 #     - org.mycompany.MyType
