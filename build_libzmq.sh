@@ -4,7 +4,6 @@
 # ./downloads/ is used as place to store downloaded files,
 # so if needed the sources could be downloaded once.
 
-set -u
 set -x
 
 # package info
@@ -65,6 +64,8 @@ fpm -t deb \
     --description "${description}" \
     --url="${url}" \
     -a ${arch} \
+    --deb-user "root" \
+    --deb-group "root" \
     --category ${section} \
     --prefix=/ \
     -d 'libc6 >= 2.7'  -d 'libgcc1 >= 1:4.1.1'  -d 'libstdc++6 >= 4.1.1'  -d 'libuuid1 >= 2.16' \

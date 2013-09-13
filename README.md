@@ -118,3 +118,7 @@ Additions by wikimedia-incubator:
 - Renames package name of libzmq0 to libzmq1 to match Ubuntu's.
 - Updated build scripts to work with newer versions of upstream packages.
 
+
+-------------------------
+
+- according to [this discussion](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=621833) debian package should not remove any users on removal. Recommended behaviour is disabling a user.

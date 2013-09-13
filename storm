@@ -4,10 +4,6 @@ JAVA_LIBRARY_PATH="/usr/local/lib:/usr/lib:/opt/local/lib"
 STORM_USER="storm"
 STORM_HOME="/usr/lib/storm"
 
-STORM_UI_PID="/var/run/storm-ui.pid"
-STORM_SUPERVISOR_PID="/var/run/storm-supervisor.pid"
-STORM_DRPC_PID="/var/run/storm-drpc.pid"
-
 STORM_LIB="$STORM_HOME/lib"
 STORM_JAR="$STORM_HOME/storm-*.jar"
 

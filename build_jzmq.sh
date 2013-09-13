@@ -4,7 +4,6 @@
 # ./downloads/ is used as place to store downloaded files,
 # so if needed the sources could be downloaded once.
 
-set -u
 set -x
 
 name=jzmq # read README why jzmq name is used as package name
@@ -76,6 +75,8 @@ fpm -t deb \
     --description "${description}" \
     --url="${url}" \
     -a ${arch} \
+    --deb-user "root" \
+    --deb-group "root" \
     --category ${section} \
     --vendor "" \
     -m "${USER}@localhost" \

@@ -6,7 +6,6 @@
 
 # TODO: Change defaults to ubuntu...?
 
-set -u
 set -x
 
 # package info:
@@ -169,17 +168,17 @@ cp ${origdir}/init.d/* etc/init.d/
 
 #_ MAKE DEBIAN _#
 # TODO: Check def-user, deb-group
-    #--deb-user "root" \
-    #--deb-group "root" \
-
+    
 fpm -t deb \
     -n ${name} \
-    -v '${version}${packaging_version_suffix}' \
+    -v "${version}${packaging_version_suffix}" \
     --description "${description}" \
-    --category '${section}' \
+    --category "${section}" \
     --url="{$url}" \
     -a ${arch} \
     --vendor "" \
+    --deb-user "root" \
+    --deb-group "root" \
     -m ${maintainer} \
     --before-install ${origdir}/storm.preinst \
     --after-install ${origdir}/storm.postinst \
