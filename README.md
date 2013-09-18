@@ -19,9 +19,10 @@ Included are three scripts to build the debian packages for a storm installation
   `./build_jzmq.sh -p 2 -m "myemail@example.com"`
 
 Just run the build scripts, and debian artifacts will be created.  
-Run `-h` to read help.  
-Note, that in packages will not depend on exact packaging version of other package.  Just, e.g., `libzmq1 >= 2.1.7`, without packaging version.  
-So you have to take care about proper package versions installed manually or (better) using puppet/chef/salt...
+Run any command with `-h` to read help.  
+Note, that packages will not depend on exact packaging version of other package.  Just like `libzmq1 >= 2.1.7`, without packaging version.  
+So you have to take care about proper package versions installed manually or (better) using puppet/chef/salt...  
+During the installation storm package also creates or enables existing storm user.
 
 Compatibity:
 -------------------
@@ -91,7 +92,7 @@ Basically there are 2 folders (except configs, logs and init scripts):
 Also, following [Filesystem Hierarchy Standard](http://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)  [here](http://www.pathname.com/fhs/): `/opt` is for programs that are not packaged and don't follow the standards. You'd just put all the libraries there together with the program.
 
 But, with these scripts storm becomes packaged!
-Any way in this package __it was choosen__ to use `/opt/storm` as `$STORM_HOME` and also as home folder for storm user. Also to save some efforts not for sorting all the storm stuff to bin/lib/share/var/etc...
+Any way in this package _it was choosen_ to use `/opt/storm` as `$STORM_HOME` and also as home folder for storm user. Also, to save some efforts needed otherwise for sorting all the storm stuff to bin/lib/share/var/etc...
 
 Maybe later, but first there should be a reason and answer to one of the questions: where to put storm user home folder (it should not be /usr/lib/storm).
 Like an option, binaries should be in /usr/bin/storm, libs in /usr/lib/storm, home folder in /var/??? or /home? or should we create /app?. It is easier and closer to (old) convention to put all the stuff to /opt, custom package that is packaged.
