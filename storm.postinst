@@ -2,7 +2,7 @@
 set -e
 
 # Set permissions on directories
-/bin/chown -R storm:storm /var/log/storm /usr/lib/storm
+/bin/chown -R storm:storm /var/log/storm /opt/storm
 
 #DEBHELPER#
 

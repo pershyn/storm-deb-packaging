@@ -14,10 +14,56 @@ description="JZMQ is the Java bindings for ZeroMQ"
 url="https://github.com/nathanmarz/jzmq.git"
 arch="all" # read README why all is used here
 section="misc"
-package_version_suffix="" # use -2 to add it to package version
 origdir="$(pwd)"
 prefix="/usr"
 downloads="${origdir}/downloads"
+maintaner="${USER}@localhost"
+
+
+#_ PROCESS CMD ARGUMENTS _#
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      cat >&2 <<EOT
+Usage: ${0##*/} [<options>]
+
+Build a jzmq Debian package.
+If a jzmq is present - does not redownload the file.
+
+Options:
+
+  -p, --packaging_version <packaging_version>
+    A suffix to add to the Debian package version. E.g. package version could be 2.0.1
+    and this could be 2, resulting in a Debian package version of 2.0.1-2.
+
+  -m, --maintainer <maintainer_email>
+    Use maintainer email to include the data into package, 
+    if not provided - will be generated automatically from user name.
+  
+EOT
+      exit 1
+      ;;
+     -p|--packaging_version)
+       packaging_version=$2
+       if [[ ! "${packaging_version}" =~ ^[0-9]+$ ]]; then
+         echo "packaging_version must be a number" >&2
+         exit 1
+       fi
+       shift
+       ;;
+     -m|--maintainer)
+       maintainer=$2
+       #if [[  ]]; then # TODO: add a check here for email
+       shift
+       ;;
+     *)
+       echo "Unknown option $1" >&2
+       exit 1
+  esac
+  shift
+done
+
+package_version_suffix="-${packaging_version}" 
 
 # download and patch the jzmq (if needed) to downloads
 mkdir -p ${downloads} && pushd ${downloads}
@@ -79,7 +125,7 @@ fpm -t deb \
     --deb-group "root" \
     --category ${section} \
     --vendor "" \
-    -m "${USER}@localhost" \
+    -m "${maintainer}" \
     --prefix=/ \
     -d "${libzmq_name} >= ${libzmq_version}" \
     -s dir \

@@ -12,7 +12,6 @@ version=2.1.7 # read README why at least 2.1.7 should be used in dependencies
 url="http://www.zeromq.org/"
 arch=$(dpkg --print-architecture)
 section="misc"
-package_version_suffix="" # e.g. use -2 to add it to package version
 description="The 0MQ lightweight messaging kernel is a library which extends the
     standard socket interfaces with features traditionally provided by
     specialised messaging middleware products. 0MQ sockets provide an
@@ -28,6 +27,53 @@ downloads="${origdir}/downloads"
 prefix="/usr"
 src_package="zeromq-${version}.tar.gz"
 download_url="http://download.zeromq.org/${src_package}"
+
+
+#_ PROCESS CMD ARGUMENTS _#
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      cat >&2 <<EOT
+Usage: ${0##*/} [<options>]
+
+Build a libzmq Debian package.
+If a libzmq folder is present - does not redownload the file.
+
+Options:
+
+  -p, --packaging_version <packaging_version>
+    A suffix to add to the Debian package version. E.g. package version could be 2.0.1
+    and this could be 2, resulting in a Debian package version of 2.0.1-2.
+
+  -m, --maintainer <maintainer_email>
+    Use maintainer email to include the data into package, 
+    if not provided - will be generated automatically from user name.
+  
+EOT
+      exit 1
+      ;;
+     -p|--packaging_version)
+       packaging_version=$2
+       if [[ ! "${packaging_version}" =~ ^[0-9]+$ ]]; then
+         echo "packaging_version must be a number" >&2
+         exit 1
+       fi
+       shift
+       ;;
+     -m|--maintainer)
+       maintainer=$2
+       #if [[  ]]; then # TODO: add a check here for email
+       shift
+       ;;
+     *)
+       echo "Unknown option $1" >&2
+       exit 1
+  esac
+  shift
+done
+
+package_version_suffix="-${packaging_version}" 
+
 
 mkdir -p ${downloads} && pushd ${downloads}
   # download package (if not exists in folder)
@@ -67,6 +113,7 @@ fpm -t deb \
     --deb-user "root" \
     --deb-group "root" \
     --category ${section} \
+    -m "${maintainer}" \
     --prefix=/ \
     -d 'libc6 >= 2.7'  -d 'libgcc1 >= 1:4.1.1'  -d 'libstdc++6 >= 4.1.1'  -d 'libuuid1 >= 2.16' \
     --after-install ${origdir}/shlib.postinst \

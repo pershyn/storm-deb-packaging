@@ -9,9 +9,9 @@ set -e
 if ! getent passwd storm > /dev/null; then
 
   echo "Creating storm user account and group"
-  addgroup storm
+  addgroup --quiet storm
 
-  adduser --system --quiet --home /var/lib/storm --no-create-home \
+  adduser --system --quiet --home /opt/storm --no-create-home \
     --shell /bin/bash --ingroup storm \
     --gecos "Storm distributed realtime computation system" storm
 fi
