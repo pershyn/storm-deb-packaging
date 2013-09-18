@@ -54,10 +54,6 @@ EOT
       ;;
      -p|--packaging_version)
        packaging_version=$2
-       if [[ ! "${packaging_version}" =~ ^[0-9]+$ ]]; then
-         echo "packaging_version must be a number" >&2
-         exit 1
-       fi
        shift
        ;;
      -m|--maintainer)
