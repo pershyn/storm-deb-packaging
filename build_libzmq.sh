@@ -109,6 +109,7 @@ fpm -t deb \
     --deb-user "root" \
     --deb-group "root" \
     --category ${section} \
+    --vendor "" \
     -m "${maintainer}" \
     --prefix=/ \
     -d 'libc6 >= 2.7'  -d 'libgcc1 >= 1:4.1.1'  -d 'libstdc++6 >= 4.1.1'  -d 'libuuid1 >= 2.16' \
