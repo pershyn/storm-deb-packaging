@@ -10,8 +10,8 @@ set -x
 name=libzmq1 # read README why name ZeroMQ library libzmq1
 version=2.1.7 # read README why at least 2.1.7 should be used in dependencies
 url="http://www.zeromq.org/"
-arch=$(dpkg --print-architecture)
-section="misc"
+arch=amd64
+section="libs"
 description="The 0MQ lightweight messaging kernel is a library which extends the
     standard socket interfaces with features traditionally provided by
     specialised messaging middleware products. 0MQ sockets provide an
