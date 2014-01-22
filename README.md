@@ -12,7 +12,7 @@ Afterwards package is moved to `./` folder, but the `./tmp` tree remains there u
 Included are three scripts to build the debian packages for a storm installation with libzmq and jzmq dependencies, with optional `-p` packaging version and `-m` maintainer.
 
 * ./build_storm.sh - Storm
-   `./build_storm.sh -v 0.8.1 -p 2 -m "myemail@example.com"`
+   `./build_storm.sh -p 2 -m "myemail@example.com"`
 * ./build_libzmq.sh - ZeroMQ libraries v 2.1.7
    `./build_libzmq.sh -p 3 -m "myemail@example.com"`
 * ./build_jzmq.sh - Java bindings for ZeroMQ v 2.1.0
