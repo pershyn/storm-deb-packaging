@@ -10,9 +10,17 @@ set -x
 
 # package info:
 name=storm
-version=""
 packaging_version=""
-default_version=0.8.1
+
+# made version hardcoded because there is no more sense to keep it flexible
+# download urls could not be generated easyly 
+# anymore for http://storm-project.net/downloads.html
+# so waiting till the project is migrated to apache
+
+version=0.9.0.1
+src_package="${name}-${version}.zip"
+download_url="https://dl.dropboxusercontent.com/s/dj86w8ojecgsam7/storm-0.9.0.1.zip"
+
 maintainer="${USER}@localhost" # default value
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
 for doing batch processing, Storm provides a set of general primitives for doing realtime computation. Storm is simple, can
@@ -45,9 +53,6 @@ If downloads/storm-${version}.zip is present, that does not redownload the file
 
 Options:
 
-  -v, --version <version>
-    Use the given version of Storm to download/use. Default is 0.8.1.
-
   -p, --packaging_version <packaging_version>
     A suffix to add to the Debian package version. E.g. Storm version could be 0.8.1
     and this could be 2, resulting in a Debian package version of 0.8.1-2.
@@ -62,14 +67,6 @@ Options:
 EOT
       exit 1
       ;;
-     -v|--version)
-       version=$2
-       if [ -z "${version}" ]; then
-         echo "Invalid download version specified" >&2
-         exit 1
-       fi
-       shift
-       ;;
      -p|--packaging_version)
        packaging_version=$2
        shift
@@ -88,13 +85,6 @@ EOT
   esac
   shift
 done
-
-if [ -z "${version}" ]; then
-  version=${default_version}
-fi
-# once version defined - set
-src_package="${name}-${version}.zip"
-download_url="https://github.com/downloads/nathanmarz/storm/${src_package}"
 
 # set packaging version suffix if provided
 packaging_version_suffix=""

@@ -1,27 +1,27 @@
 Storm Debian Packaging
 ==============================================================
 
-Build scripts / sample configuration for building a storm, libzmq and jzmq .deb-packages with [FPM](https://github.com/jordansissel/fpm/).  
+Build scripts / sample configuration for building a storm, libzmq and jzmq .deb-packages with [FPM](https://github.com/jordansissel/fpm/).
 
-The build scripts provided compile the dependencies listed [here](https://github.com/nathanmarz/storm/wiki/Installing-native-dependencies).  
+The build scripts provided compile the dependencies listed [here](https://github.com/nathanmarz/storm/wiki/Installing-native-dependencies).
 
 Libraries are downloaded to `./downloads/`, if files present - script will not redownload them. This also could be used to build custom versions, etc, just by putting/linking correct files to `./downloads/`
-The build_storm.sh script will setup a target directory in `./tmp/` with the format required for FPM to turn a directory into a .deb package. As a bonus, if you want to change the structure of the package, just change the script to modify the target directory. Then issue the FPM build command, and you are good to go.  
+The build_storm.sh script will setup a target directory in `./tmp/` with the format required for FPM to turn a directory into a .deb package. As a bonus, if you want to change the structure of the package, just change the script to modify the target directory. Then issue the FPM build command, and you are good to go.
 Afterwards package is moved to `./` folder, but the `./tmp` tree remains there untill cleanup before next build.
 
-Included are three scripts to build the debian packages for a storm installation with libzmq and jzmq dependencies, with optional `-p` packaging version and `-m` maintainer. 
+Included are three scripts to build the debian packages for a storm installation with libzmq and jzmq dependencies, with optional `-p` packaging version and `-m` maintainer.
 
-* ./build_storm.sh - Storm  
+* ./build_storm.sh - Storm
    `./build_storm.sh -v 0.8.1 -p 2 -m "myemail@example.com"`
-* ./build_libzmq.sh - ZeroMQ libraries v 2.1.7  
+* ./build_libzmq.sh - ZeroMQ libraries v 2.1.7
    `./build_libzmq.sh -p 3 -m "myemail@example.com"`
-* ./build_jzmq.sh - Java bindings for ZeroMQ v 2.1.0   
+* ./build_jzmq.sh - Java bindings for ZeroMQ v 2.1.0
   `./build_jzmq.sh -p 2 -m "myemail@example.com"`
 
-Just run the build scripts, and debian artifacts will be created.  
-Run any command with `-h` to read help.  
-Note, that packages will not depend on exact packaging version of other package.  Just like `libzmq1 >= 2.1.7`, without packaging version.  
-So you have to take care about proper package versions installed manually or (better) using puppet/chef/salt...  
+Just run the build scripts, and debian artifacts will be created.
+Run any command with `-h` to read help.
+Note, that packages will not depend on exact packaging version of other package.  Just like `libzmq1 >= 2.1.7`, without packaging version.
+So you have to take care about proper package versions installed manually or (better) using puppet/chef/salt...
 During the installation storm package also creates or enables existing storm user.
 
 Compatibity:
@@ -39,14 +39,14 @@ Details:
 Storm 0.8.1 and 0.8.2 [was tested](https://github.com/nathanmarz/storm/wiki/Installing-native-dependencies) on EXACT version of libraries (ZeroMQ 2.1.7, jzmq 2.1.0-SNAPSHOT)
 
 #### zeromq ####
-Due to specific development model [that zmq uses](http://zeromq.org/area:faq), 
+Due to specific development model [that zmq uses](http://zeromq.org/area:faq),
 library package for ZeroMQ ended up having several names:
 
 * libzmq0 - for really really old versions (apparently 2.0.* is still libzmq0)
-* libzmq1 - for versions > 2.1.10 
+* libzmq1 - for versions > 2.1.10
 * libzmq3 - for versions 3.*.
 
-libzmq is GPLed, so the there are stable versions in [debian repos](http://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libzmq).  
+libzmq is GPLed, so the there are stable versions in [debian repos](http://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libzmq).
 
 So, what package should be used (on your own risk)? :)
 
@@ -55,18 +55,18 @@ So, what package should be used (on your own risk)? :)
 * if specific libzmq1 needed (either recommended 2.1.7 or other) -> use provided scripts and fpm scripts to build it.
 
 #### jzmq ####
-There may be a confusion how to name this package ( _libjzmq_ or _jzmq_):  
+There may be a confusion how to name this package ( _libjzmq_ or _jzmq_):
 While this might be a matter of taste, in code the jzmq is used because in source codes of frozen version (jzmq 2.1.0-SNAPSHOT):
 
 * Project originally is named "jzmq"
 * project files are libjzmq.so, libjzmq.dylib, libjzmq.dll ( _this is where another option comes from_ )
 * Project Artifact ID from [pom.xml](https://github.com/nathanmarz/jzmq/blob/master/pom.xml) is __jzmq__
 * The jzmq project under LGPL, so it will probably will make it way to official debian repos with this name.
-* with the project there is a suite to build a package for debian, <br> and in this suite ( _./debian/control_ ) has next information:  
+* with the project there is a suite to build a package for debian, <br> and in this suite ( _./debian/control_ ) has next information:
 ```
-       package: jzmq  
-       Architecture: any  
-       Depends: libzmq0 (>= 2.0.10), ${shlibs:Depends}, ${misc:Depends}  
+       package: jzmq
+       Architecture: any
+       Depends: libzmq0 (>= 2.0.10), ${shlibs:Depends}, ${misc:Depends}
 ```
 The bad thing is that this frozen version originally depends on libzmq0,
 so it makes sense to change the dependency to libzmq1 >= 2.0.10 becase this package and suite is intended to be used with storm.
@@ -80,7 +80,7 @@ So, by default version 2.1.7 of ZeroMQ library that is used. The package called 
 
 Checking the history of this project, initially `$STORM_HOME` was `/opt/storm`. then some of the forks used `/usr/lib/storm` then original maintaner used `/var/lib/storm`, and another forks moved again to use `/opt/storm`...
 
-Storm distribution (as it is downloaded in these scripts), do not follow conventions (like separating libs, and executables), so all the stuff that has to do something with storm is in one `$STORM_HOME` folder.
+Storm distribution (as it is downloaded in these scripts), deviate from debian packaging conventions conventions (like separating libs, and executables), so all the stuff that has to do something with storm should go to one `$STORM_HOME` folder.
 
 Basically there are 2 folders (except configs, logs and init scripts):
 
@@ -104,15 +104,23 @@ Dependencies and Requirements:
 
 ### Compile time:
 
+This package was tested in ubuntu 12.04 with next deps
+
 ```bash
 apt-get install -y git g++ uuid-dev ruby1.9.3 make wget curl
 gem install fpm
 apt-get install -y openjdk-6-jdk pkg-config autoconf automake unzip
 
-export JAVA_HOME=/usr/lib/jvm/java-6-openjdk 
+export JAVA_HOME=/usr/lib/jvm/java-6-openjdk
 ```
 
-### Run Time 
+On some occassions path to fpm should also be specified in PATH,
+for example:
+```bash
+export PATH=$PATH:~/.gem/ruby/2.0.0/bin
+```
+
+### Run Time
 
 According to [official storm guide](https://github.com/nathanmarz/storm/wiki/Setting-up-a-Storm-cluster):
 
@@ -142,6 +150,7 @@ Storm Package Sample Layout
 ------
 
 ```
+.
 ├── etc
 │   ├── default
 │   │   ├── storm
@@ -160,6 +169,7 @@ Storm Package Sample Layout
 ├── opt
 │   └── storm
 │       ├── bin
+│       │   ├── build_modules.sh
 │       │   ├── build_release.sh
 │       │   ├── install_zmq.sh
 │       │   ├── javadoc.sh
@@ -169,16 +179,18 @@ Storm Package Sample Layout
 │       ├── lib
 │       │   ├── asm-4.0.jar
 │       │   ├── carbonite-1.5.0.jar
+│       │   ├── clj-stacktrace-0.2.2.jar
 │       │   ├── clj-time-0.4.1.jar
 │       │   ├── clojure-1.4.0.jar
-│       │   ├── clout-0.4.1.jar
+│       │   ├── clojure-complete-0.2.3.jar
+│       │   ├── clout-1.0.1.jar
 │       │   ├── commons-codec-1.4.jar
 │       │   ├── commons-exec-1.1.jar
 │       │   ├── commons-fileupload-1.2.1.jar
 │       │   ├── commons-io-1.4.jar
 │       │   ├── commons-lang-2.5.jar
 │       │   ├── commons-logging-1.1.1.jar
-│       │   ├── compojure-0.6.4.jar
+│       │   ├── compojure-1.1.3.jar
 │       │   ├── core.incubator-0.1.0.jar
 │       │   ├── curator-client-1.0.1.jar
 │       │   ├── curator-framework-1.0.1.jar
@@ -196,38 +208,52 @@ Storm Package Sample Layout
 │       │   ├── junit-3.8.1.jar
 │       │   ├── jzmq-2.1.0.jar
 │       │   ├── kryo-2.17.jar
-│       │   ├── libthrift7-0.7.0.jar
-│       │   ├── log4j-1.2.16.jar
+│       │   ├── libthrift7-0.7.0-2.jar
+│       │   ├── log4j-over-slf4j-1.6.6.jar
+│       │   ├── logback-classic-1.0.6.jar
+│       │   ├── logback-core-1.0.6.jar
 │       │   ├── math.numeric-tower-0.0.1.jar
 │       │   ├── minlog-1.2.jar
+│       │   ├── mockito-all-1.9.5.jar
+│       │   ├── netty-3.6.3.Final.jar
 │       │   ├── objenesis-1.2.jar
 │       │   ├── reflectasm-1.07-shaded.jar
-│       │   ├── ring-core-0.3.10.jar
+│       │   ├── ring-core-1.1.5.jar
+│       │   ├── ring-devel-0.3.11.jar
 │       │   ├── ring-jetty-adapter-0.3.11.jar
 │       │   ├── ring-servlet-0.3.11.jar
 │       │   ├── servlet-api-2.5-20081211.jar
 │       │   ├── servlet-api-2.5.jar
-│       │   ├── slf4j-api-1.5.8.jar
-│       │   ├── slf4j-log4j12-1.5.8.jar
-│       │   ├── snakeyaml-1.9.jar
+│       │   ├── slf4j-api-1.6.5.jar
+│       │   ├── snakeyaml-1.11.jar
 │       │   ├── tools.cli-0.2.2.jar
 │       │   ├── tools.logging-0.2.3.jar
 │       │   ├── tools.macro-0.1.0.jar
+│       │   ├── tools.nrepl-0.2.3.jar
 │       │   └── zookeeper-3.3.3.jar
 │       ├── LICENSE.html
+│       ├── logback
+│       │   └── cluster.xml
 │       ├── public
 │       │   ├── css
-│       │   │   └── bootstrap-1.1.0.css
+│       │   │   ├── bootstrap-1.1.0.css
+│       │   │   └── style.css
 │       │   └── js
 │       │       ├── jquery-1.6.2.min.js
 │       │       ├── jquery.cookies.2.2.0.min.js
-│       │       └── jquery.tablesorter.min.js
+│       │       ├── jquery.tablesorter.min.js
+│       │       └── script.js
 │       ├── README.markdown
 │       ├── RELEASE
-│       └── storm-0.8.1.jar
+│       ├── storm-console-logging-0.9.0.1.jar
+│       ├── storm-core-0.9.0.1.jar
+│       └── storm-netty-0.9.0.1.jar
 └── var
     └── log
         └── storm
+
+15 directories, 85 files
+
 ```
 
 Read Materials:
