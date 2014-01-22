@@ -26,9 +26,8 @@ During the installation storm package also creates or enables existing storm use
 
 Compatibity:
 -------------------
-* Storm 0.8.1 - supported
-* Storm 0.8.2 - planned to be supported
-* Debian Squeeze - supported
+* Storm 0.8.1 @ Debian Squeeze - supported and tested in [storm-0.8.1-squeeze](https://github.com/pershyn/storm-deb-packaging/tree/storm-0.8.1-squeeze) tagged branch
+* Storm 0.9.0.1 @ Debian Squeeze - supported
 * Debian Wheezy - planned to be supported
 * Ubuntu 12.04 - planned to be supported
 
