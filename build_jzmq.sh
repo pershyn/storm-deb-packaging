@@ -108,9 +108,10 @@ if [ $? != 0 ]; then
 fi
 
 mkdir build
-make install DESTDIR='pwd'/build
+make install DESTDIR=`pwd`/build
 
 #_ MAKE DEBIAN _#
+pushd build
 fpm -t deb \
     -n ${name} \
     -v ${version}${package_version_suffix} \
@@ -130,4 +131,5 @@ fpm -t deb \
     -- .
 
 mv ${name}*.deb ${origdir}
+popd
 popd
