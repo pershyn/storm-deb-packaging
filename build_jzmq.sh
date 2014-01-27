@@ -111,7 +111,7 @@ mkdir build
 make install DESTDIR=`pwd`/build
 
 #_ MAKE DEBIAN _#
-pushd
+pushd build
 fpm -t deb \
     -n ${name} \
     -v ${version}${package_version_suffix} \
