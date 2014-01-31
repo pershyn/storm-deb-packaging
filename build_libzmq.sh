@@ -9,6 +9,7 @@ set -x
 # package info
 name=libzmq1 # read README why name ZeroMQ library libzmq1
 version=2.1.7 # read README why at least 2.1.7 should be used in dependencies
+unpacked_name=zeromq-2.1.7 # this one is used drop old dir in tmp
 url="http://www.zeromq.org/"
 arch=amd64
 section="libs"
@@ -46,9 +47,9 @@ Options:
     and this could be 2, resulting in a Debian package version of 2.0.1-2.
 
   -m, --maintainer <maintainer_email>
-    Use maintainer email to include the data into package, 
+    Use maintainer email to include the data into package,
     if not provided - will be generated automatically from user name.
-  
+
 EOT
       exit 1
       ;;
@@ -68,7 +69,7 @@ EOT
   shift
 done
 
-package_version_suffix="-${packaging_version}" 
+package_version_suffix="-${packaging_version}"
 
 
 mkdir -p ${downloads} && pushd ${downloads}
@@ -80,11 +81,11 @@ popd
 
 #_ MAIN _#
 rm -rf ${name}*.deb
-# If temp directory exists, remove if
-if [ -d tmp ]; then
-  rm -rf tmp
+# If unpacked directory exists, remove it
+if [ -d tmp/${unpacked_name} ]; thens
+  rm -rf tmp/${unpacked_name}
 fi
-# Make build directory, save location
+# Ensure build directory exists, save location
 mkdir -p tmp && pushd tmp
 #_ Unpack and compile _#
 tar -zxf ${downloads}/${src_package}

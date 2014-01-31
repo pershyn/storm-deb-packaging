@@ -10,12 +10,12 @@ name=jzmq # read README why jzmq name is used as package name
 version=2.1.0
 libzmq_name=libzmq1 # read README why name ZeroMQ library libzmq1
 libzmq_version=2.0.10 # read README why 2.0.10 should be used in dependencies
+libzmq_unpacked_root_path=zeromq-2.1.7 # this is where configure should find zmq.h
 description="JZMQ is the Java bindings for ZeroMQ"
 url="https://github.com/nathanmarz/jzmq.git"
 arch="all" # read README why all is used here
 section="misc"
 origdir="$(pwd)"
-prefix="/usr"
 downloads="${origdir}/downloads"
 maintaner="${USER}@localhost"
 
@@ -37,9 +37,9 @@ Options:
     and this could be 2, resulting in a Debian package version of 2.0.1-2.
 
   -m, --maintainer <maintainer_email>
-    Use maintainer email to include the data into package, 
+    Use maintainer email to include the data into package,
     if not provided - will be generated automatically from user name.
-  
+
 EOT
       exit 1
       ;;
@@ -59,7 +59,7 @@ EOT
   shift
 done
 
-package_version_suffix="-${packaging_version}" 
+package_version_suffix="-${packaging_version}"
 
 # download and patch the jzmq (if needed) to downloads
 mkdir -p ${downloads} && pushd ${downloads}
@@ -67,7 +67,7 @@ mkdir -p ${downloads} && pushd ${downloads}
  # do not clone if folder exists
  if [[ ! -d "${downloads}/${name}" ]]; then
   git clone https://github.com/nathanmarz/jzmq.git
-  
+
   # Patch for being able to build the jzmq under Ubuntu 12.x releases
   if [ $(cat /etc/lsb-release|grep -i release|grep 12\.) ]; then
     cd jzmq
@@ -87,19 +87,18 @@ fi
 # Cleanup old debian files
 rm -rf ${name}*.deb
 # If temp directory exists, remove it
-if [ -d tmp ]; then
-  rm -rf tmp
+if [ -d tmp/jzmq ]; then
+  rm -rf tmp/jzmq
 fi
 # Make build directory, save location
-mkdir -p tmp && pushd tmp
+mkdir -p tmp/jzmq && pushd tmp/jzmq
 
 # copy downloaded repo to the tmp dir
 cp -r ${downloads}/${name}/* .
 
-# Build package
+# Build package, link to bounded libzmq installation in tmp
 ./autogen.sh
-./configure --prefix=${prefix} #TODO: what is this prefix?
-# old prefix  "--with-zeromq=${origdir}/tmp/${libzmq_name}/build/usr/local"
+./configure --with-zeromq=${origdir}/tmp/${libzmq_unpacked_root_path}/build/usr/include
 
 make
 if [ $? != 0 ]; then
@@ -133,4 +132,3 @@ fpm -t deb \
 mv ${name}*.deb ${origdir}
 popd
 popd
-

@@ -103,20 +103,32 @@ Dependencies and Requirements:
 
 ### Compile time:
 
-This package was tested in ubuntu 12.04 with next deps
+Dependencies for Debian/Ubuntu:
 
 ```bash
-apt-get install -y git g++ uuid-dev ruby1.9.3 make wget curl
-gem install fpm
-apt-get install -y openjdk-6-jdk pkg-config autoconf automake unzip
-
+apt-get install -y git g++ uuid-dev ruby make wget curl libtool openjdk-6-jdk pkg-config autoconf automake unzip
 export JAVA_HOME=/usr/lib/jvm/java-6-openjdk
+
+gem install fpm
 ```
 
 On some occassions path to fpm should also be specified in PATH,
 for example:
 ```bash
 export PATH=$PATH:~/.gem/ruby/2.0.0/bin
+```
+```bash
+export PATH=$PATH:/var/lib/gems/1.8/bin/
+```
+
+The jzmq package will link to your current version of glibc on the system that you compile the package on.
+So it is _highly recommended_ to compile jzmq & package on the same system where it will be running, to avoid library version compatibility issues, like below:
+
+```
+YYYY-MM-DD hh:mm:ss b.s.d.worker [ERROR] Error on initialization of server mk-worker
+java.lang.UnsatisfiedLinkError: /usr/lib/libjzmq.so.0.0.0: /lib/libc.so.6: version `GLIBC_2.14' not found (required by /usr/lib/libjzmq.so.0.0.0)
+        at java.lang.ClassLoader$NativeLibrary.load(Native Method) ~[na:1.6.0_27]
+...
 ```
 
 ### Run Time
