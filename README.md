@@ -9,6 +9,9 @@ Libraries are downloaded to `./downloads/`, if files present - script will not r
 The build_storm.sh script will setup a target directory in `./tmp/` with the format required for FPM to turn a directory into a .deb package. As a bonus, if you want to change the structure of the package, just change the script to modify the target directory. Then issue the FPM build command, and you are good to go.
 Afterwards package is moved to `./` folder, but the `./tmp` tree remains there untill cleanup before next build.
 
+Usage:
+----------------
+
 Included are three scripts to build the debian packages for a storm installation with libzmq and jzmq dependencies, with optional `-p` packaging version and `-m` maintainer.
 
 * ./build_storm.sh - Storm
@@ -18,7 +21,7 @@ Included are three scripts to build the debian packages for a storm installation
 * ./build_jzmq.sh - Java bindings for ZeroMQ v 2.1.0
   `./build_jzmq.sh -p 2 -m "myemail@example.com"`
 
-Just run the build scripts, and debian artifacts will be created.
+Just run the build scripts in prepared environment, and debian artifacts will be created.
 Run any command with `-h` to read help.
 Note, that packages will not depend on exact packaging version of other package.  Just like `libzmq1 >= 2.1.7`, without packaging version.
 So you have to take care about proper package versions installed manually or (better) using puppet/chef/salt...
@@ -28,14 +31,15 @@ Compatibity:
 -------------------
 * Storm 0.8.1 @ Debian Squeeze - supported and tested in [storm-0.8.1-squeeze](https://github.com/pershyn/storm-deb-packaging/tree/storm-0.8.1-squeeze) tagged branch
 * Storm 0.9.0.1 @ Debian Squeeze - supported
-* Debian Wheezy - planned to be supported
-* Ubuntu 12.04 - planned to be supported
+* Apache Storm 0.9.1 Incubating @ Debian Wheezy - supported
+* Ubuntu 12.04 - may work, but was not tested.
 
 Details:
 -------------
 
 ### ZeroMQ and jzmq ###
 Storm 0.8.1 and 0.8.2 [was tested](https://github.com/nathanmarz/storm/wiki/Installing-native-dependencies) on EXACT version of libraries (ZeroMQ 2.1.7, jzmq 2.1.0-SNAPSHOT)
+For storm 0.9.1 this seems to be the same, however can be checked. Please open an issue if you find it to be different.
 
 #### zeromq ####
 Due to specific development model [that zmq uses](http://zeromq.org/area:faq),
@@ -52,6 +56,8 @@ So, what package should be used (on your own risk)? :)
 * if latest stable libzmq1 needed -> libzmq1 from debian repos.
 * if latest stable libzmq3 needed -> libzmq3 from debian repos.
 * if specific libzmq1 needed (either recommended 2.1.7 or other) -> use provided scripts and fpm scripts to build it.
+
+In Storm 0.9.1 default messaging layer was moved to Jetty instead of 0MQ, however this package is yet here for some possible compatility issues.
 
 #### jzmq ####
 There may be a confusion how to name this package ( _libjzmq_ or _jzmq_):
@@ -74,6 +80,8 @@ In upstream of jzmq development this change has been made already and now [jzmq 
 Also it gives the user an opportunity to update to newer version of ZeroMQ (e.g. 2.2.0) with keeping the old version of bindings (which may be not the best way to go).
 
 So, by default version 2.1.7 of ZeroMQ library that is used. The package called libzmq1. JZMQ has version 2.1.0 and package name jzmq.
+
+In Storm 0.9.1 default messaging layer was moved to Jetty instead of 0MQ, however this package is yet here for some possible compatility issues.
 
 ### $STORM_HOME and storm user home.
 
@@ -130,6 +138,21 @@ java.lang.UnsatisfiedLinkError: /usr/lib/libjzmq.so.0.0.0: /lib/libc.so.6: versi
         at java.lang.ClassLoader$NativeLibrary.load(Native Method) ~[na:1.6.0_27]
 ...
 ```
+
+#### Virtual Environment
+
+I have used [vagrant-debian-wheezy-64](https://github.com/dotzero/vagrant-debian-wheezy-64) to create a vagrant box, called `wheezy64`. It is used as a base env to build package.
+Mostly I have done this because it extends script compatibility to other OS's and there are no issues with ruby gems, etc.
+So I would recommend to use vagrant to atomatically provision the machine to build the script, when you install add this box to vagrant.
+
+```bash 
+vagrant up
+vagrant ssh
+cd /vagrant
+# and then use commands from _Usage_ section.
+```
+
+I think other debian-based distribution can be used as well, if you don't have wheezy box.
 
 ### Run Time
 
