@@ -9,26 +9,27 @@
 set -x
 
 # package info:
-name=storm
+name=apache-storm
 packaging_version=""
 
 # made version hardcoded because there is no more sense to keep it flexible
-# download urls could not be generated easyly 
+# download urls could not be generated easyly
 # anymore for http://storm-project.net/downloads.html
-# so waiting till the project is migrated to apache
+# so waiting till the project is migrated fully to apache
 
-version=0.9.0.1
+version=0.9.1-incubating
 src_package="${name}-${version}.zip"
-download_url="https://dl.dropboxusercontent.com/s/dj86w8ojecgsam7/storm-0.9.0.1.zip"
+download_url="ftp://ftp.mirrorservice.org/sites/ftp.apache.org/incubator/storm/apache-storm-0.9.1-incubating/apache-storm-0.9.1-incubating.zip"
+
 
 maintainer="${USER}@localhost" # default value
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
 for doing batch processing, Storm provides a set of general primitives for doing realtime computation. Storm is simple, can
 be used with any programming language, is used by many companies, and is a lot of fun to use!"
-url="http://storm-project.net"
-arch="all"
+url="http://storm.incubator.apache.org/"
+arch="all" # java
 section="mics"
-prefix="/usr/lib"
+prefix="/usr/lib" # TODO: avoid prefix and follow debian convention to put that stuff to opt?
 
 # build options and vars:
 origdir="$(pwd)"
@@ -37,7 +38,7 @@ downloads="${origdir}/downloads"
 
 storm_home=/opt/storm
 libzmq_name=libzmq1 # read README why name ZeroMQ library libzmq1
-libzmq_version=2.1.7 # read README why libzmq 2.1.7 should be used as storm dep. 
+libzmq_version=2.1.7 # read README why libzmq 2.1.7 should be used as storm dep.
 jzmq_name=jzmq # read README why jzmq name is used as package name
 jzmq_version=2.0.10 # read README why jzmq 2.0.10 should be used
 
@@ -58,10 +59,10 @@ Options:
     and this could be 2, resulting in a Debian package version of 0.8.1-2.
 
   -m, --maintainer <maintainer_email>
-    Use maintainer email to include the data into package, 
+    Use maintainer email to include the data into package,
     if not provided - will be generated automatically from user name.
-  
-  --upstart 
+
+  --upstart
     builds package for ubuntu upstart, by default builds for debian init.d.
 
 EOT
@@ -129,13 +130,14 @@ fi
 
 # Explode downloaded archive & cleanup files
 # TODO: check that storm home folder is written with right data
-unzip ${downloads}/storm-${version}.zip
-rm -rf storm-${version}/logs
-rm -rf storm-${version}/log4j
-rm -rf storm-${version}/conf
-cp -R storm-${version}/* build${storm_home}
+unzip ${downloads}/${name}-${version}.zip
+rm -rf ${name}-${version}/logs
+rm -rf ${name}-${version}/log4j
+rm -rf ${name}-${version}/conf
+cp -R ${name}-${version}/* build${storm_home}
 
 # Substitue default files provided with storm sources
+# TODO: think ouf how can we avoid this patch (by just having upstream configs, but sane).
 cd build
 cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
 cp ${origdir}/storm.yaml etc/storm
@@ -147,7 +149,7 @@ if [ $dist == "debian" ]; then
 #else # ubuntu, etc - upstart based
   # TODO: this copies files for ubuntu... Copy init scripts for Debian?
   # cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
-  #_ TODO: Check symlinks for upstart init scripts 
+  #_ TODO: Check symlinks for upstart init scripts
   #for f in ${buildroot}/etc/init/*; do f=$(basename $f); f=${f%.conf}; ln -s /lib/init/upstart-job ${buildroot}/etc/init.d/$f; done
 fi
 
@@ -155,7 +157,7 @@ cp ${origdir}/init.d/* etc/init.d/
 
 #_ MAKE DEBIAN _#
 # TODO: Check def-user, deb-group
-    
+
 fpm -t deb \
     -n ${name} \
     -v "${version}${packaging_version_suffix}" \
@@ -171,7 +173,7 @@ fpm -t deb \
     --after-install ${origdir}/storm.postinst \
     --after-remove ${origdir}/storm.postrm \
     --prefix=/ \
-    -d "${libzmq_name} >= ${libzmq_version}" -d "${jzmq_name} >= ${jzmq_version}" -d "unzip" \
+    -d "${libzmq_name} >= ${libzmq_version}" -d "${jzmq_name} >= ${jzmq_version}" \
     -s dir \
     -- .
 
