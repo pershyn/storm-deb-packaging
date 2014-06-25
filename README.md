@@ -167,6 +167,7 @@ According to [official storm guide](https://github.com/nathanmarz/storm/wiki/Set
 Things to do:
 --------------------
 
+- [ ] clean-up storm-local on package removal, so it doesn't collide with further installations
 - [ ] check ownership of /usr/lib/storm is storm (but for rest system parts in there is root...) if we use root here, then storm cannot write to its home folder.
 - [ ] check package installation behaviour when home folder exists.
 - [ ] libzmq*.so files executable permission by default (and jzmq). Should it be so.
