@@ -27,8 +27,16 @@ set -e
 . /lib/lsb/init-functions
 
 # Set STORM Options
-STORM_CMD="-classpath $STORM_CLASSPATH -Xms${STORM_NIMBUS_JVM_MEMORY} -Xmx${STORM_NIMBUS_JVM_MEMORY} -Djava.library.path=\"$JAVA_LIBRARY_PATH\" -Dstorm.options=\"$STORM_OPTIONS\" -Dstorm.home=$STORM_HOME $STORM_NIMBUS_JVM_OPTS backtype.storm.daemon.nimbus"
-
+STORM_CMD="-classpath $STORM_CLASSPATH \
+           -Xms${STORM_NIMBUS_JVM_MEMORY} \
+           -Xmx${STORM_NIMBUS_JVM_MEMORY} \
+           -Djava.library.path=\"$JAVA_LIBRARY_PATH\" \
+           -Dstorm.options=\"$STORM_OPTIONS\" \
+           -Dlogfile.name=nimbus.log \
+           -Dlogback.configurationFile=$STORM_HOME/logback/cluster.xml \
+           -Dstorm.home=$STORM_HOME \
+           $STORM_NIMBUS_JVM_OPTS \
+           backtype.storm.daemon.nimbus"
 
 running() {
   kill -0 `cat ${STORM_NIMBUS_PID}` > /dev/null 2>&1
