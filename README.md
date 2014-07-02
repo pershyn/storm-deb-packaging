@@ -106,6 +106,13 @@ Like an option, binaries should be in /usr/bin/storm, libs in /usr/lib/storm, ho
 
 `storm.preinst` creates/enables a user with home folder hardcoded to /opt/storm, but folder is not created because of --no-create-home param. The storm home is set in several files, so if changed - they are needed to be checked for consistency.
 
+### Logging
+
+By default storm shipped pre-configured to log into ${storm.home}/logs/
+This configuration is done in logback.xml.
+
+The package however creates /var/log/storm folder and expects that logs should be there, while storm doesn't do this. And this is a good question if it should (then we have to patch the config as well).
+
 Dependencies and Requirements:
 ----------------------
 
@@ -166,7 +173,7 @@ According to [official storm guide](https://github.com/nathanmarz/storm/wiki/Set
 
 Things to do:
 --------------------
-
+- [ ] define how to use logging (new logback config.)
 - [ ] clean-up storm-local on package removal, so it doesn't collide with further installations
 - [ ] check ownership of /usr/lib/storm is storm (but for rest system parts in there is root...) if we use root here, then storm cannot write to its home folder.
 - [ ] check package installation behaviour when home folder exists.
