@@ -4,6 +4,10 @@
 # ./downloads/ is used as place to store downloaded files,
 # so if needed the sources could be downloaded once.
 
+# TODO: think of not debian'izing this project,
+# rather keep it as close as possible to original with only small changes.
+# for example - logs.
+
 # TODO: Change defaults to ubuntu...?
 
 set -x
@@ -17,10 +21,9 @@ packaging_version=""
 # anymore for http://storm-project.net/downloads.html
 # so waiting till the project is migrated fully to apache
 
-version=0.9.1-incubating
+version=0.9.2-incubating
 src_package="${name}-${version}.zip"
-download_url="ftp://ftp.mirrorservice.org/sites/ftp.apache.org/incubator/storm/apache-storm-0.9.1-incubating/apache-storm-0.9.1-incubating.zip"
-
+download_url="http://www.eu.apache.org/dist/incubator/storm/apache-storm-0.9.2-incubating/apache-storm-0.9.2-incubating.zip"
 
 maintainer="${USER}@localhost" # default value
 description="Storm is a distributed realtime computation system. Similar to how Hadoop provides a set of general primitives
@@ -36,11 +39,9 @@ origdir="$(pwd)"
 dist="debian" #use old debian init.d scripts or ubuntu upstart
 downloads="${origdir}/downloads"
 
+# Read README why /opt/storm is used
+# TODO: /opt/storm vs /usr/lib??
 storm_home=/opt/storm
-libzmq_name=libzmq1 # read README why name ZeroMQ library libzmq1
-libzmq_version=2.1.7 # read README why libzmq 2.1.7 should be used as storm dep.
-jzmq_name=jzmq # read README why jzmq name is used as package name
-jzmq_version=2.0.10 # read README why jzmq 2.0.10 should be used
 
 #_ PROCESS CMD ARGUMENTS _#
 while [ $# -gt 0 ]; do
@@ -117,9 +118,9 @@ mkdir -p tmp && pushd tmp
 mkdir -p storm
 cd storm
 mkdir -p build${storm_home}
-mkdir -p build/etc/default
-mkdir -p build/etc/storm
-mkdir -p build/var/log/storm
+mkdir -p build/etc/default    # for config
+mkdir -p build/etc/storm      # for config
+mkdir -p build/var/log/storm  # for log files
 
 ## Create folder for init scripts/upstart
 if [ $dist == "debian" ]; then
@@ -131,13 +132,10 @@ fi
 # Explode downloaded archive & cleanup files
 # TODO: check that storm home folder is written with right data
 unzip ${downloads}/${name}-${version}.zip
-rm -rf ${name}-${version}/logs
-rm -rf ${name}-${version}/log4j
-rm -rf ${name}-${version}/conf
 cp -R ${name}-${version}/* build${storm_home}
 
-# Substitue default files provided with storm sources
-# TODO: think ouf how can we avoid this patch (by just having upstream configs, but sane).
+# Substitute default files provided with storm sources
+# TODO: think of how can we avoid this patch (by just having upstream configs, but sane).
 cd build
 cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
 cp ${origdir}/storm.yaml etc/storm
@@ -156,7 +154,7 @@ fi
 cp ${origdir}/init.d/* etc/init.d/
 
 #_ MAKE DEBIAN _#
-# TODO: Check def-user, deb-group
+# TODO: Check deb-user, deb-group to be "storm"
 
 fpm -t deb \
     -n ${name} \
@@ -173,7 +171,6 @@ fpm -t deb \
     --after-install ${origdir}/storm.postinst \
     --after-remove ${origdir}/storm.postrm \
     --prefix=/ \
-    -d "${libzmq_name} >= ${libzmq_version}" -d "${jzmq_name} >= ${jzmq_version}" \
     -s dir \
     -- .
 
