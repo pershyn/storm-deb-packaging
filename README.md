@@ -81,9 +81,9 @@ Like an option, binaries should be in /usr/bin/storm, libs in /usr/lib/storm, ho
 ### Logging
 
 By default storm shipped pre-configured to log into ${storm.home}/logs/
-This configuration is done in logback.xml.
+This configuration is done in `logback.xml`.
 
-The package however creates /var/log/storm folder and expects that logs should be there, while storm doesn't do this. And this is a good question if it should (then we have to patch the config as well).
+This behaviour is kept untouched so far.
 
 Dependencies and Requirements:
 ----------------------

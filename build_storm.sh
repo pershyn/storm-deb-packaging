@@ -4,13 +4,7 @@
 # ./downloads/ is used as place to store downloaded files,
 # so if needed the sources could be downloaded once.
 
-# TODO: think of not debian'izing this project,
-# rather keep it as close as possible to original with only small changes.
-# for example - logs.
-
-# TODO: Change defaults to ubuntu...?
-
-set -x
+# set -x # uncomment for debug
 
 # package info:
 name=apache-storm
@@ -32,7 +26,6 @@ be used with any programming language, is used by many companies, and is a lot o
 url="http://storm.incubator.apache.org/"
 arch="all" # java
 section="mics"
-prefix="/usr/lib" # TODO: avoid prefix and follow debian convention to put that stuff to opt?
 
 # build options and vars:
 origdir="$(pwd)"
@@ -120,7 +113,6 @@ cd storm
 mkdir -p build${storm_home}
 mkdir -p build/etc/default    # for config
 mkdir -p build/etc/storm      # for config
-mkdir -p build/var/log/storm  # for log files
 
 ## Create folder for init scripts/upstart
 if [ $dist == "debian" ]; then
@@ -145,19 +137,16 @@ cp ${origdir}/etc/default/storm-nimbus etc/default
 cp ${origdir}/etc/default/storm-supervisor etc/default
 # all the configs
 cp ${origdir}/etc/storm/storm.yaml etc/storm
-cp ${origdir}/etc/storm/storm.log.properties etc/storm
 
 # copy inistall scripts for debian
 if [ $dist == "debian" ]; then
-  cp ${origdir}/init.d/* etc/init.d/
+  cp ${origdir}/etc/init.d/* etc/init.d/
 #else # ubuntu, etc - upstart based
   # TODO: this copies files for ubuntu... Copy init scripts for Debian?
   # cp ${origdir}/storm-nimbus.conf ${origdir}/storm-supervisor.conf ${origdir}/storm-ui.conf ${origdir}/storm-drpc.conf etc/init
   #_ TODO: Check symlinks for upstart init scripts
   #for f in ${buildroot}/etc/init/*; do f=$(basename $f); f=${f%.conf}; ln -s /lib/init/upstart-job ${buildroot}/etc/init.d/$f; done
 fi
-
-cp ${origdir}/init.d/* etc/init.d/
 
 #_ MAKE DEBIAN _#
 # TODO: Check deb-user, deb-group to be "storm"
