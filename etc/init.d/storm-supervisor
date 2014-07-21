@@ -1,5 +1,5 @@
 #! /bin/bash
- 
+
 ### BEGIN INIT INFO
 # Provides:          storm-supervisor
 # Required-Start:    $local_fs $remote_fs $network $syslog
@@ -9,7 +9,7 @@
 # Short-Description: starts the storm supervisor server
 # Description:       starts storm-supervisor using start-stop-daemon
 ### END INIT INFO
- 
+
 NAME="storm-supervisor"
 DESC="storm supervisor"
 
@@ -21,9 +21,9 @@ fi
 if [ -f /etc/default/storm-supervisor ] ; then
     . /etc/default/storm-supervisor
 fi
- 
+
 set -e
- 
+
 . /lib/lsb/init-functions
 
 # Set STORM Options
@@ -32,6 +32,7 @@ STORM_CMD="-classpath $STORM_CLASSPATH \
            -Xmx${STORM_SUPERVISOR_JVM_MEMORY} \
            -Djava.library.path=\"$JAVA_LIBRARY_PATH\" \
            -Dstorm.options=\"$STORM_OPTIONS\" \
+           -Dstorm.conf.file=/etc/storm/storm.yaml \
            -Dlogfile.name=supervisor.log \
            -Dlogback.configurationFile=$STORM_HOME/logback/cluster.xml \
            -Dstorm.home=$STORM_HOME \
@@ -58,7 +59,7 @@ find_java() {
 find_java
 JAVA=${JAVA_HOME}/bin/java
 PID=${STORM_SUPERVISOR_PID}
- 
+
 case "$1" in
   start)
 
@@ -97,5 +98,5 @@ case "$1" in
     exit 1
     ;;
 esac
- 
+
 exit 0

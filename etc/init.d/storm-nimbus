@@ -1,17 +1,17 @@
 #! /bin/bash
- 
+
 ### BEGIN INIT INFO
-# Provides:          storm-drpc
+# Provides:          storm-nimbus
 # Required-Start:    $local_fs $remote_fs $network $syslog
 # Required-Stop:     $local_fs $remote_fs $network $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: starts the storm DRPC
-# Description:       starts storm-drpc using start-stop-daemon
+# Short-Description: starts the storm nimbus server
+# Description:       starts storm-nimbus using start-stop-daemon
 ### END INIT INFO
- 
-NAME="storm-drpc"
-DESC="storm-drpc"
+
+NAME="storm-nimbus"
+DESC="storm-nimbus"
 
 # Include storm defaults if available
 if [ -f /etc/default/storm ] ; then
@@ -19,27 +19,28 @@ if [ -f /etc/default/storm ] ; then
 fi
 
 if [ -f /etc/default/storm-nimbus ] ; then
-    . /etc/default/storm-drpc
+    . /etc/default/storm-nimbus
 fi
- 
+
 set -e
- 
+
 . /lib/lsb/init-functions
 
 # Set STORM Options
-STORM_CMD="-classpath $STORM_CLASSPATH \
-           -Xms$STORM_DRPC_JVM_MEMORY \
-           -Xmx$STORM_DRPC_JVM_MEMORY \
+STORM_CMD="-Dstorm.conf.file=/etc/storm/storm.yaml \
+           -classpath $STORM_CLASSPATH \
+           -Xms${STORM_NIMBUS_JVM_MEMORY} \
+           -Xmx${STORM_NIMBUS_JVM_MEMORY} \
            -Djava.library.path=\"$JAVA_LIBRARY_PATH\" \
            -Dstorm.options=\"$STORM_OPTIONS\" \
-           -Dlogfile.name=drpc.log \
+           -Dlogfile.name=nimbus.log \
            -Dlogback.configurationFile=$STORM_HOME/logback/cluster.xml \
            -Dstorm.home=$STORM_HOME \
-           $STORM_DRPC_JVM_OPTS \
-           backtype.storm.daemon.drpc"
+           $STORM_NIMBUS_JVM_OPTS \
+           backtype.storm.daemon.nimbus"
 
 running() {
-  kill -0 `cat ${STORM_DRPC_PID}` > /dev/null 2>&1
+  kill -0 `cat ${STORM_NIMBUS_PID}` > /dev/null 2>&1
 }
 
 find_java() {
@@ -57,8 +58,8 @@ find_java() {
 
 find_java
 JAVA=${JAVA_HOME}/bin/java
-PID=${STORM_DRPC_PID}
- 
+PID=${STORM_NIMBUS_PID}
+
 case "$1" in
   start)
 
@@ -97,5 +98,5 @@ case "$1" in
     exit 1
     ;;
 esac
- 
+
 exit 0

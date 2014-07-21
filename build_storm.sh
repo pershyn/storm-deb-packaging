@@ -137,9 +137,15 @@ cp -R ${name}-${version}/* build${storm_home}
 # Substitute default files provided with storm sources
 # TODO: think of how can we avoid this patch (by just having upstream configs, but sane).
 cd build
-cp ${origdir}/storm ${origdir}/storm-nimbus ${origdir}/storm-supervisor ${origdir}/storm-ui ${origdir}/storm-drpc etc/default
-cp ${origdir}/storm.yaml etc/storm
-cp ${origdir}/storm.log.properties etc/storm
+# all the defaults
+cp ${origdir}/etc/default/storm etc/default
+cp ${origdir}/etc/default/storm-ui etc/default
+cp ${origdir}/etc/default/storm-drpc etc/default
+cp ${origdir}/etc/default/storm-nimbus etc/default
+cp ${origdir}/etc/default/storm-supervisor etc/default
+# all the configs
+cp ${origdir}/etc/storm/storm.yaml etc/storm
+cp ${origdir}/etc/storm/storm.log.properties etc/storm
 
 # copy inistall scripts for debian
 if [ $dist == "debian" ]; then
