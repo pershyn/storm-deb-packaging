@@ -59,11 +59,25 @@ The dilemma is how to organize a package, due to different perception by admins 
   |                        | ADMINS                | DEVELOPERS
   ------------------------------------------------------------------
   | Binary files           | /usr/bin/             | $STORM_HOME/bin
-  | Librariers             | /usr/lib/             | $STORM_HOME/lib
-  | Configs                | /etc/storm/           | $STORM_HOME/conf and $STORM_HOME/logback
+  | Librariers             | /usr/lib/storm        | $STORM_HOME/lib
+  | Configs                | /etc/storm/           | $STORM_HOME/conf (and $STORM_HOME/logback)
+  | Logback config         | /etc/storm/logback.cfg| $STORM_HOME/logback #(rly?) or there is something else?  
   | Logs                   | /var/log/storm        | $STORM_HOME/logs
   | Supervisors (daemons)  | /etc/init.d/ (debian) | N/A
-  | storm.local.dir        | ?                     | ?
+  | storm.local.dir        | /var/lib/storm        | ? (e.g. /mnt/storm by miguno, link below)
+
+```
+
+```
+/usr/bin/storm -> $STORM_HOME/bin/storm
+/usr/lib/storm -> $STORM_HOME
+# so when storm is called it will refer to ./lib
+# other way around for etc/storm to save configs on storm uninstall
+# and also save logs on uninstall
+$STORM_HOME/conf -> /etc/storm/
+$STORM_HOME/logback -> /etc/storm/
+$STORM_HOME/logs -> /var/log/storm/
+
 
 ```
 
@@ -134,6 +148,10 @@ According to [official storm guide](https://github.com/nathanmarz/storm/wiki/Set
 
 Things to do:
 --------------------
+
+- [ ] move all the env variable from defaults to storm_env.ini
+- [ ] updated to hardcoded STORM_CONF in ./conf
+
 - [ ] define how to use logging (new logback config.)
 - [ ] clean-up storm-local on package removal, so it doesn't collide with further installations
 - [ ] check ownership of /usr/lib/storm is storm (but for rest system parts in there is root...) if we use root here, then storm cannot write to its home folder.
