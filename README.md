@@ -69,6 +69,7 @@ The dilemma is how to organize a package, due to different perception by admins 
 ```
 
 ```
+
 /usr/bin/storm -> $STORM_HOME/bin/storm
 /usr/lib/storm -> $STORM_HOME
 # so when storm is called it will refer to ./lib
@@ -79,6 +80,25 @@ $STORM_HOME/logback -> /etc/storm/
 $STORM_HOME/logs -> /var/log/storm/
 
 links
+
+```
+
+```
+drwxr-xr-x 2 root root  4096 Jul 24 15:00 bin
+-rw-r--r-- 1 root root 34239 Jun 12 22:46 CHANGELOG.md
+lrwxrwxrwx 1 root root    10 Jul 24 14:39 conf -> /etc/storm
+-rw-r--r-- 1 root root   538 Mar 13 00:17 DISCLAIMER
+drwxr-xr-x 2 root root  4096 Jul 24 15:00 lib
+-rw-r--r-- 1 root root 22822 Jun 11 18:07 LICENSE
+lrwxrwxrwx 1 root root    10 Jul 24 14:39 logback -> /etc/storm
+lrwxrwxrwx 1 root root    14 Jul 24 14:39 logs -> /var/log/storm
+-rw-r--r-- 1 root root   981 Jun 10 15:10 NOTICE
+drwxr-xr-x 5 root root  4096 Jul 24 15:00 public
+-rw-r--r-- 1 root root  7445 Jun  9 16:24 README.markdown
+-rw-r--r-- 1 root root    17 Jun 16 14:22 RELEASE
+-rw-r--r-- 1 root root  3581 May 29 14:20 SECURITY.md
+lrwxrwxrwx 1 root root    14 Jul 24 15:37 storm-local -> /var/lib/storm
+
 
 ```
 
@@ -153,7 +173,8 @@ Things to do:
 - [ ] move all the env variable from defaults to storm_env.ini
 - [ ] updated to hardcoded STORM_CONF in ./conf
 - [ ] separate project to 4 packages (common, nimbus, ui, supervisor)
-- [ ] wright access only to log folder and storm.local.dir
+- [ ] wright access only to log folder and storm.local.dir (/var/lib/storm)
+- [ ] patch for default distribution to use /var/lib/storm as storm.local.dir
 
 apt-get install fakeroot
 apt-get install dpkg-dev

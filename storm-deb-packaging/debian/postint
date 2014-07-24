@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# log files should be writable by storm user
+chown storm:storm /var/log/storm
+
+# storm.local.dir should also be writable by storm user
+chown storm:storm /var/lib/storm

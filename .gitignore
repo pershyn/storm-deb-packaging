@@ -5,3 +5,6 @@ tmp/
 *.dsc
 *.tar.gz
 *.zip
+*.log
+*.substvars
+
