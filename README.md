@@ -78,6 +78,7 @@ $STORM_HOME/conf -> /etc/storm/
 $STORM_HOME/logback -> /etc/storm/
 $STORM_HOME/logs -> /var/log/storm/
 
+links
 
 ```
 
@@ -151,6 +152,13 @@ Things to do:
 
 - [ ] move all the env variable from defaults to storm_env.ini
 - [ ] updated to hardcoded STORM_CONF in ./conf
+- [ ] separate project to 4 packages (common, nimbus, ui, supervisor)
+- [ ] wright access only to log folder and storm.local.dir
+
+apt-get install fakeroot
+apt-get install dpkg-dev
+
+dpkf-buildpackage -rfakeroot
 
 - [ ] define how to use logging (new logback config.)
 - [ ] clean-up storm-local on package removal, so it doesn't collide with further installations

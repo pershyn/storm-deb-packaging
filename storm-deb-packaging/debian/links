@@ -1,0 +1,16 @@
+# keep the configs and logs out of project folder
+# so they are kept when package is removed
+
+# link TO configs
+etc/storm usr/lib/storm/conf
+etc/storm usr/lib/storm/logback
+
+# link TO logs
+var/log/storm usr/lib/storm/logs
+
+
+# Keep all other stuff in package @STORM_HOME folder
+
+# link the binary
+# so when storm is called it will refer to ./lib
+usr/lib/storm/bin/storm usr/bin/storm

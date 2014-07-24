@@ -1,0 +1,9 @@
+apache-storm-0.9.2-incubating/bin/storm usr/lib/storm/bin/
+apache-storm-0.9.2-incubating/conf/* etc/storm/
+# skip the examples
+# skip external
+apache-storm-0.9.2-incubating/lib usr/lib/storm/
+apache-storm-0.9.2-incubating/logback/* etc/storm/
+apache-storm-0.9.2-incubating/public usr/lib/storm/
+
+etc/init.d/* etc/init.d

@@ -6,7 +6,3 @@ STORM_HOME="/opt/storm"
 
 STORM_LIB="$STORM_HOME/lib"
 STORM_JAR="$STORM_HOME/storm-*.jar"
-
-STORM_CONF="/etc/storm"
-STORM_CLASSPATH="$(echo $STORM_LIB/*.jar | tr ' ' ':'):$(echo $STORM_JAR | tr ' ' ':'):$(echo $STORM_CONF | tr ' ' ':'):${STORM_HOME}"
-STORM_OPTIONS=""
