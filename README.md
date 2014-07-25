@@ -1,87 +1,95 @@
-Storm Debian Packaging
-==============================================================
-
-Build scripts for building a storm .deb-packages with [FPM](https://github.com/jordansissel/fpm/).
-
-The build scripts provided compile the dependencies listed [here](https://github.com/nathanmarz/storm/wiki/Installing-native-dependencies).
-
-Libraries are downloaded to `./downloads/`, if files present - script will not redownload them. This also could be used to build custom versions, etc, just by putting/linking correct files to `./downloads/`
-
-The build_storm.sh script will setup a target directory in `./tmp/` with the format required for FPM to turn a directory into a .deb package. As a bonus, if you want to change the structure of the package, just change the script to modify the target directory. Then issue the FPM build command, and you are good to go.
-
-Afterwards package is moved to `./` folder, but the `./tmp` tree remains there untill cleanup before next build.
-
-Usage:
-----------------
-
-Run the script with optional `-p` packaging version and `-m` maintainer.
-
-* ./build_storm.sh - Storm
-   `./build_storm.sh -p 2 -m "myemail@example.com"`
-
-Run with `-h` to read help.
-
-Just run the build scripts in prepared environment, and debian artifacts will be created.
+# Storm Debian Packaging
 
 
+Debian packaging for [Apache Storm](http://storm.incubator.apache.org) distributed realtime computation system.
+
+I have [previously](https://github.com/pershyn/storm-deb-packaging) used [FPM](https://github.com/jordansissel/fpm/) to build storm 0.8 till 0.9.1. But it was hard to maintain and also messy, while give some options to parametrize build for ubuntu (upstart) and theoretically rpm.
+
+Also, before 0.9.1 building storm involved building zmq and jzmq packages.
+That was a pain, details [here](https://github.com/pershyn/storm-deb-packaging/blob/37bca226b8183e86d63b40c33ffd776b7b105c23/README.md#zeromq-and-jzmq).
+Now these dependencies are gone and [storm flies with netty](http://yahooeng.tumblr.com/post/64758709722/making-storm-fly-with-netty) by default.
+
+## Usage:
+
+1. Clone the repository and edit the `storm-deb-packaging/debian/changelog` to set packaging version/maintainer to your prefered values, so you get contacted if other people will use the package compiled by you.
+2. Prepare the environment. You should have debian-based distribution with all tools listed in `bootstrap.sh` installed. Also, Vagrant is recommended, please find details below.
+3. In environment go to nested folder `storm-deb-packaging` in repository run the `dpkg-buildpackage -rfakeroot`. The package would be then created in `../`
+
+## Using a package:
+
+According to [official storm guide](https://github.com/nathanmarz/storm/wiki/Setting-up-a-Storm-cluster)
+you have to have next things installed:
+- Java 6
+- Python 2.6.6
 
 During the installation storm package also creates or enables existing storm user.
 
-Compatibity:
--------------------
-* Different versions, tested on Squeeze/Wheezy, please see tags in repository.
+1. After you install a package - edit the `etc/storm/storm.yaml` to specify nimbus and zookeeper path.
+2. Start required services with following commands
+```
+#: /etc/init.d/storm-nimbus start
+#: /etc/init.d/storm-ui start
+#: /etc/init.d/storm-supervisor start
+#: /etc/init.d/storm-drpc start
+```
+3. Enable those that you need to start automatically on system restart. (TODO: insert one-liner)
 
-Details:
--------------
+It is recommended to use Software Configuration Management tools to manage storm clusters.
+Like salt, chef, puppet, ansible.
+Also you can check wirbelsturm for virtual deploys and storm-deploy for quick provisioning
+in cloud.
 
-### $STORM_HOME and storm user home.
+## Compatibity:
 
-Checking the history of this project, initially `$STORM_HOME` was `/opt/storm`.
-Then some of the forks used `/usr/lib/storm`,
-then original maintaner used `/var/lib/storm`,
-and another forks moved again to use `/opt/storm`...
+* This version is intended to be used against 0.9.2 and Debian Wheezy.
+Presumably it can be ran on any other debian-based distribution, because relies only on LSB.
+* There are previous versions (up to 0.9.1) built with FPM [here](https://github.com/pershyn/storm-deb-packaging). See tags/branches and forks.
 
-Storm distribution (as it is downloaded in these scripts),
-deviate from debian packaging conventions conventions, (like separating libs, and executables), so all the stuff that has to do something with storm should go to one `$STORM_HOME` folder.
+## Details:
+
+### $STORM_HOME, storm user home, and storm.local.dir.
 
 Basically there are 2 folders (except configs, logs and init scripts):
 
 - `$STORM_HOME` - created by package, stores all the libs and storm executables in `lib` and `bin` subfolders
-- `storm.local.dir` - should be created by user and mentioned in storm.yaml (according to installation manual), by default `§STORM_HOME/storm-local` is used.
+- `storm.local.dir` - should be created by user and mentioned in storm.yaml, by default `§STORM_HOME/storm-local` is used.
 
-[This](http://serverfault.com/questions/96416/should-i-install-linux-applications-in-var-or-opt) is a good answer "where should software be installed".
+Checking the history of [this fpm-project](https://github.com/pershyn/storm-deb-packaging), initially `$STORM_HOME` was `/opt/storm`.
+Then some of the forks used `/usr/lib/storm`,
+then original maintaner used `/var/lib/storm`,
+and another forks moved to use `/opt/storm`...
 
-Also, following [Filesystem Hierarchy Standard](http://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)  [here](http://www.pathname.com/fhs/): `/opt` is for programs that are not packaged and don't follow the standards. You'd just put all the libraries there together with the program.
+So, there was a bit of a chaos.
 
-The dilemma is how to organize a package, due to different perception by admins and storm developers:
+Storm distribution deviate from debian packaging conventions conventions,
+(like separating libs, and executables),
+so all the stuff that has to do something with storm goes to one `$STORM_HOME` folder.
 
-```
-  |                        | ADMINS                | DEVELOPERS
-  ------------------------------------------------------------------
-  | Binary files           | /usr/bin/             | $STORM_HOME/bin
-  | Librariers             | /usr/lib/storm        | $STORM_HOME/lib
-  | Configs                | /etc/storm/           | $STORM_HOME/conf (and $STORM_HOME/logback)
-  | Logback config         | /etc/storm/logback.cfg| $STORM_HOME/logback #(rly?) or there is something else?  
-  | Logs                   | /var/log/storm        | $STORM_HOME/logs
-  | Supervisors (daemons)  | /etc/init.d/ (debian) | N/A
-  | storm.local.dir        | /var/lib/storm        | ? (e.g. /mnt/storm by miguno, link below)
+The dilemma is how to organize a package, due to different perception by admins
+and storm developers:
 
 ```
+  |                   | ADMINS (Debian)       | DEVELOPERS
+  -------------------------------------------------------------
+  | Binary files      | /usr/bin/*            | $STORM_HOME/bin/*
+  | Librariers        | /usr/lib/storm        | $STORM_HOME/lib/*
+  | Configs           | /etc/storm/           | $STORM_HOME/conf/*
+  | Logback config    | /etc/storm/logback.xml| $STORM_HOME/logback/cluster.xml
+  | Logs              | /var/log/storm        | $STORM_HOME/logs/*
+  | Supervisors       | /etc/init.d/*         | N/A
+  | storm.local.dir   | /var/lib/storm/*      | ? (e.g. /mnt/storm, see Links)
 
 ```
+Also, there are 2 concepts - the software could be packaged or not-packaged.
 
-/usr/bin/storm -> $STORM_HOME/bin/storm
-/usr/lib/storm -> $STORM_HOME
-# so when storm is called it will refer to ./lib
-# other way around for etc/storm to save configs on storm uninstall
-# and also save logs on uninstall
-$STORM_HOME/conf -> /etc/storm/
-$STORM_HOME/logback -> /etc/storm/
-$STORM_HOME/logs -> /var/log/storm/
+There is also [Filesystem Hierarchy Standard aka FHS](http://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
+([here](http://www.pathname.com/fhs/)): that says `/opt` is for programs that are _not packaged_ and don't follow the standards. You'd just put all the libraries there together with the program.
+That is the case when you want to install storm directly from archive.
 
-links
+Also, using the configuration files in this repository the storm becomes packaged
+and starts to follow FHS. This is achieved by giving symlinks.
 
-```
+See below how `$STORM_HOME` folder looks like:
 
 ```
 drwxr-xr-x 2 root root  4096 Jul 24 15:00 bin
@@ -98,38 +106,30 @@ drwxr-xr-x 5 root root  4096 Jul 24 15:00 public
 -rw-r--r-- 1 root root    17 Jun 16 14:22 RELEASE
 -rw-r--r-- 1 root root  3581 May 29 14:20 SECURITY.md
 lrwxrwxrwx 1 root root    14 Jul 24 15:37 storm-local -> /var/lib/storm
-
-
 ```
+`var/log/storm` and `/var/lib/storm` are owned by storm user, so processes that
+are also running under storm user can write state and logs.
 
-So, in this package _it was choosen_ to use `/opt/storm` as `$STORM_HOME`
-and also as home folder for storm user.
-
-Also, to save some efforts needed otherwise for sorting all the storm stuff to
-bin/lib/share/var/etc...
-
-Maybe later, but first there should be a reason and answer to one of the questions: where to put storm user home folder (it should not be /usr/lib/storm).
-Like an option, binaries should be in /usr/bin/storm, libs in /usr/lib/storm, home folder in /var/??? or /home? or should we create /app?. It is easier and closer to (old) convention to put all the stuff to /opt, custom package that is packaged.
-
-`storm.preinst` creates/enables a user with home folder hardcoded to /opt/storm, but folder is not created because of --no-create-home param. The storm home is set in several files, so if changed - they are needed to be checked for consistency.
+This gives a precise control on configurations, log files and binaries following FHS.
+Also such a schema satisfies both developers and admins paradigms.
 
 ### Logging
 
 By default storm shipped pre-configured to log into ${storm.home}/logs/
 This configuration is done in `logback.xml`.
 
-This behaviour is kept untouched so far.
+because `${storm.home}/logs/` are symlinked to `/var/log/storm` they end up where expected by admins.
 
-Dependencies and Requirements:
-----------------------
+#Dependencies and Requirements:
 
 ### Vagrant (Optional)
 
-I have used [vagrant-debian-wheezy-64](https://github.com/dotzero/vagrant-debian-wheezy-64) to create a vagrant box, called `wheezy64`. It is used as a base env to build package.
+The [vagrant-debian-wheezy-64](https://github.com/dotzero/vagrant-debian-wheezy-64)
+scripts were used to create a vagrant box, called `wheezy64`.
+This box is used as a base env to build package.
 
-Mostly I have done this because it extends script compatibility to other OS's and there are no issues with ruby gems, etc.
-
-So I would recommend to use vagrant to automatically provision the machine to build the script. (relies on `wheezy64`)
+It is recommended to use vagrant to automatically provision the machine to build
+the script. (relies on `wheezy64`)
 
 ```bash
 vagrant up
@@ -138,176 +138,153 @@ cd /vagrant
 # and then use commands from _Usage_ section.
 ```
 
-I think other debian-based distribution can be used as well, if you don't have wheezy box.
+Probably the other debian-based distribution can be used as well, if you don't have wheezy box.
 
 ### Compile time:
 
-Provisioning script installs next dependencies for Debian/Ubuntu:
-
-```bash
-apt-get install -y git g++ uuid-dev ruby make wget curl libtool openjdk-6-jdk pkg-config autoconf automake unzip
-export JAVA_HOME=/usr/lib/jvm/java-6-openjdk
-
-gem install fpm
-```
-
-On some occassions path to fpm should also be specified in PATH,
-for example:
-```bash
-export PATH=$PATH:~/.gem/ruby/2.0.0/bin
-```
-```bash
-export PATH=$PATH:/var/lib/gems/1.8/bin/
-```
-
-### Run Time
-
-According to [official storm guide](https://github.com/nathanmarz/storm/wiki/Setting-up-a-Storm-cluster):
-
-- Java 6
-- Python 2.6.6
+Provisioning script `bootstrap.sh` installs all needed dependencies for Debian-based distribution to build a package.
+Same script is used to provision Vagrant environment.
 
 Things to do:
 --------------------
 
-- [ ] move all the env variable from defaults to storm_env.ini
-- [ ] updated to hardcoded STORM_CONF in ./conf
-- [ ] separate project to 4 packages (common, nimbus, ui, supervisor)
-- [ ] wright access only to log folder and storm.local.dir (/var/lib/storm)
-- [ ] patch for default distribution to use /var/lib/storm as storm.local.dir
-
-apt-get install fakeroot
-apt-get install dpkg-dev
-
-dpkf-buildpackage -rfakeroot
-
-- [ ] define how to use logging (new logback config.)
+- [ ] Ensure python 2.6.6 and java6 are added to package dependencies so they get installed automatically.
+- [ ] add a note about separate project to 4 packages (common, nimbus, ui, supervisor)
 - [ ] clean-up storm-local on package removal, so it doesn't collide with further installations
-- [ ] check ownership of /usr/lib/storm is storm (but for rest system parts in there is root...) if we use root here, then storm cannot write to its home folder.
+- [ ] storm user home??? ($STORM.HOME is owned by root.)
 - [ ] check package installation behaviour when home folder exists.
-- [ ] libzmq*.so files executable permission by default (and jzmq). Should it be so.
-- [ ] add a note on folder structure of build system
-- [ ] add a note - all the build process is done in tmp directory
-- [ ] support passing maintainer parameter
-- [ ] add intended use note
-- [ ] add a note on storm user home (/opt vs /usr/local/storm vs /usr/lib/storm), link to fil
 - [ ] https://wiki.debian.org/MaintainerScripts
-- [ ] Symlinks /etc/init.d/storm-* services to /lib/init/upstart-job. ??
-- [ ] wget vs curl used - can drop one to reduce dependencies...
-- [ ] check ubuntu upstart ."They assume your primary interface is ETH0, so you may want to change that if it's not the case. Since there is no way to update-rc.d an upstart script, there is an option for 'ENABLE=yes' in /etc/default/storm-process. I am currently using Monit, so chose not to have Upstart 'respawn' on process failure. If you would like Upstart to provide this feature, you can add 'respawn' to the scripts and upstart should take care of this for you. So using your favorite configuration management engine, you can change this to 'yes' to start the daemon on reboot."
+- [ ] Symlinks /etc/init.d/storm-* services to /lib/init/upstart-job. for ubuntu support??? check ubuntu upstart...
 
-Storm Package Sample Layout
-------
+## Storm Package Sample Layout
 
 ```
-.
-├── etc
-│   ├── default
-│   │   ├── storm
-│   │   ├── storm-drpc
-│   │   ├── storm-nimbus
-│   │   ├── storm-supervisor
-│   │   └── storm-ui
-│   ├── init.d
-│   │   ├── storm-drpc
-│   │   ├── storm-nimbus
-│   │   ├── storm-supervisor
-│   │   └── storm-ui
-│   └── storm
-│       ├── storm.log.properties
-│       └── storm.yaml
-├── opt
-│   └── storm
-│       ├── bin
-│       │   ├── build_modules.sh
-│       │   ├── build_release.sh
-│       │   ├── install_zmq.sh
-│       │   ├── javadoc.sh
-│       │   ├── storm
-│       │   └── to_maven.sh
-│       ├── CHANGELOG.md
-│       ├── lib
-│       │   ├── asm-4.0.jar
-│       │   ├── carbonite-1.5.0.jar
-│       │   ├── clj-stacktrace-0.2.2.jar
-│       │   ├── clj-time-0.4.1.jar
-│       │   ├── clojure-1.4.0.jar
-│       │   ├── clojure-complete-0.2.3.jar
-│       │   ├── clout-1.0.1.jar
-│       │   ├── commons-codec-1.4.jar
-│       │   ├── commons-exec-1.1.jar
-│       │   ├── commons-fileupload-1.2.1.jar
-│       │   ├── commons-io-1.4.jar
-│       │   ├── commons-lang-2.5.jar
-│       │   ├── commons-logging-1.1.1.jar
-│       │   ├── compojure-1.1.3.jar
-│       │   ├── core.incubator-0.1.0.jar
-│       │   ├── curator-client-1.0.1.jar
-│       │   ├── curator-framework-1.0.1.jar
-│       │   ├── disruptor-2.10.1.jar
-│       │   ├── guava-13.0.jar
-│       │   ├── hiccup-0.3.6.jar
-│       │   ├── httpclient-4.1.1.jar
-│       │   ├── httpcore-4.1.jar
-│       │   ├── jetty-6.1.26.jar
-│       │   ├── jetty-util-6.1.26.jar
-│       │   ├── jgrapht-0.8.3.jar
-│       │   ├── jline-0.9.94.jar
-│       │   ├── joda-time-2.0.jar
-│       │   ├── json-simple-1.1.jar
-│       │   ├── junit-3.8.1.jar
-│       │   ├── jzmq-2.1.0.jar
-│       │   ├── kryo-2.17.jar
-│       │   ├── libthrift7-0.7.0-2.jar
-│       │   ├── log4j-over-slf4j-1.6.6.jar
-│       │   ├── logback-classic-1.0.6.jar
-│       │   ├── logback-core-1.0.6.jar
-│       │   ├── math.numeric-tower-0.0.1.jar
-│       │   ├── minlog-1.2.jar
-│       │   ├── mockito-all-1.9.5.jar
-│       │   ├── netty-3.6.3.Final.jar
-│       │   ├── objenesis-1.2.jar
-│       │   ├── reflectasm-1.07-shaded.jar
-│       │   ├── ring-core-1.1.5.jar
-│       │   ├── ring-devel-0.3.11.jar
-│       │   ├── ring-jetty-adapter-0.3.11.jar
-│       │   ├── ring-servlet-0.3.11.jar
-│       │   ├── servlet-api-2.5-20081211.jar
-│       │   ├── servlet-api-2.5.jar
-│       │   ├── slf4j-api-1.6.5.jar
-│       │   ├── snakeyaml-1.11.jar
-│       │   ├── tools.cli-0.2.2.jar
-│       │   ├── tools.logging-0.2.3.jar
-│       │   ├── tools.macro-0.1.0.jar
-│       │   ├── tools.nrepl-0.2.3.jar
-│       │   └── zookeeper-3.3.3.jar
-│       ├── LICENSE.html
-│       ├── logback
-│       │   └── cluster.xml
-│       ├── public
-│       │   ├── css
-│       │   │   ├── bootstrap-1.1.0.css
-│       │   │   └── style.css
-│       │   └── js
-│       │       ├── jquery-1.6.2.min.js
-│       │       ├── jquery.cookies.2.2.0.min.js
-│       │       ├── jquery.tablesorter.min.js
-│       │       └── script.js
-│       ├── README.markdown
-│       ├── RELEASE
-│       ├── storm-console-logging-0.9.0.1.jar
-│       ├── storm-core-0.9.0.1.jar
-│       └── storm-netty-0.9.0.1.jar
-└── var
-    └── log
-        └── storm
+$ dpkg -c /vagrant/apache-storm_0.9.2-incubating_all.deb
 
-15 directories, 85 files
-
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./var/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./var/lib/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./var/lib/storm/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./var/lib/storm/storm-local/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./var/log/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./var/log/storm/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/share/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/share/doc/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/share/doc/apache-storm/
+-rw-r--r-- root/root       215 2014-07-23 14:49 ./usr/share/doc/apache-storm/copyright
+-rw-r--r-- root/root       160 2014-07-24 14:39 ./usr/share/doc/apache-storm/changelog.Debian.gz
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/lib/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/lib/storm/
+-rw-r--r-- root/root        17 2014-06-16 12:22 ./usr/lib/storm/RELEASE
+-rw-r--r-- root/root       981 2014-06-10 13:10 ./usr/lib/storm/NOTICE
+-rw-r--r-- root/root       538 2014-03-12 23:17 ./usr/lib/storm/DISCLAIMER
+drwxr-xr-x root/root         0 2014-06-16 12:22 ./usr/lib/storm/public/
+-rw-r--r-- root/root      4141 2014-06-11 16:07 ./usr/lib/storm/public/index.html
+drwxr-xr-x root/root         0 2014-05-29 12:20 ./usr/lib/storm/public/css/
+-rw-r--r-- root/root     56497 2014-03-12 23:17 ./usr/lib/storm/public/css/bootstrap-1.4.0.css
+-rw-r--r-- root/root      1088 2014-05-29 12:20 ./usr/lib/storm/public/css/style.css
+drwxr-xr-x root/root         0 2014-06-11 17:03 ./usr/lib/storm/public/templates/
+-rw-r--r-- root/root      9880 2014-06-11 17:03 ./usr/lib/storm/public/templates/topology-page-template.html
+-rw-r--r-- root/root     13535 2014-06-11 16:07 ./usr/lib/storm/public/templates/component-page-template.html
+-rw-r--r-- root/root       884 2014-06-11 16:07 ./usr/lib/storm/public/templates/json-error-template.html
+-rw-r--r-- root/root      4685 2014-06-11 16:07 ./usr/lib/storm/public/templates/index-page-template.html
+drwxr-xr-x root/root         0 2014-06-11 16:07 ./usr/lib/storm/public/js/
+-rw-r--r-- root/root     15826 2014-06-09 14:45 ./usr/lib/storm/public/js/arbor-tween.js
+-rw-r--r-- root/root     16959 2014-06-11 15:04 ./usr/lib/storm/public/js/jquery.mustache.js
+-rw-r--r-- root/root      5017 2014-06-09 14:25 ./usr/lib/storm/public/js/script.js
+-rw-r--r-- root/root      5496 2013-12-05 12:33 ./usr/lib/storm/public/js/jquery.cookies.2.2.0.min.js
+-rw-r--r-- root/root     14975 2014-06-11 16:07 ./usr/lib/storm/public/js/visualization.js
+-rw-r--r-- root/root     15976 2014-06-09 14:45 ./usr/lib/storm/public/js/arbor-graphics.js
+-rw-r--r-- root/root     27481 2014-06-09 14:45 ./usr/lib/storm/public/js/arbor.js
+-rw-r--r-- root/root     91555 2013-12-05 12:33 ./usr/lib/storm/public/js/jquery-1.6.2.min.js
+-rw-r--r-- root/root     16532 2013-12-05 12:33 ./usr/lib/storm/public/js/jquery.tablesorter.min.js
+-rw-r--r-- root/root      8830 2014-06-09 14:25 ./usr/lib/storm/public/js/purl.js
+-rw-r--r-- root/root      7981 2014-03-12 23:17 ./usr/lib/storm/public/js/bootstrap-twipsy.js
+-rw-r--r-- root/root      5093 2014-06-11 16:07 ./usr/lib/storm/public/topology.html
+-rw-r--r-- root/root      5475 2014-06-11 16:07 ./usr/lib/storm/public/component.html
+-rw-r--r-- root/root      3581 2014-05-29 12:20 ./usr/lib/storm/SECURITY.md
+drwxr-xr-x root/root         0 2014-06-16 12:22 ./usr/lib/storm/lib/
+-rw-r--r-- root/root     67254 2014-02-26 12:39 ./usr/lib/storm/lib/curator-client-2.4.0.jar
+-rw-r--r-- root/root     65612 2013-12-27 14:24 ./usr/lib/storm/lib/reflectasm-1.07-shaded.jar
+-rw-r--r-- root/root    208781 2013-12-27 14:23 ./usr/lib/storm/lib/jline-2.11.jar
+-rw-r--r-- root/root      3122 2013-12-27 14:24 ./usr/lib/storm/lib/clout-1.0.1.jar
+-rw-r--r-- root/root      3210 2013-12-27 14:24 ./usr/lib/storm/lib/ring-servlet-0.3.11.jar
+-rw-r--r-- root/root    785556 2014-02-26 12:14 ./usr/lib/storm/lib/netty-3.2.2.Final.jar
+-rw-r--r-- root/root    232771 2014-01-05 20:55 ./usr/lib/storm/lib/commons-codec-1.6.jar
+-rw-r--r-- root/root    185140 2014-01-30 21:17 ./usr/lib/storm/lib/commons-io-2.4.jar
+-rw-r--r-- root/root     21932 2013-12-27 14:24 ./usr/lib/storm/lib/ring-core-1.1.5.jar
+-rw-r--r-- root/root    282269 2014-03-26 14:41 ./usr/lib/storm/lib/httpcore-4.3.2.jar
+-rw-r--r-- root/root   5308970 2014-06-13 16:57 ./usr/lib/storm/lib/storm-core-0.9.2-incubating.jar
+-rw-r--r-- root/root     46022 2013-12-27 14:24 ./usr/lib/storm/lib/asm-4.0.jar
+-rw-r--r-- root/root      6367 2013-12-27 14:24 ./usr/lib/storm/lib/ring-devel-0.3.11.jar
+-rw-r--r-- root/root    333259 2013-12-27 14:24 ./usr/lib/storm/lib/jgrapht-core-0.9.0.jar
+-rw-r--r-- root/root    179720 2014-02-26 12:39 ./usr/lib/storm/lib/curator-framework-2.4.0.jar
+-rw-r--r-- root/root     16046 2013-12-27 14:24 ./usr/lib/storm/lib/json-simple-1.1.jar
+-rw-r--r-- root/root   1202373 2013-12-27 14:24 ./usr/lib/storm/lib/netty-3.6.3.Final.jar
+-rw-r--r-- root/root    177131 2013-12-27 14:24 ./usr/lib/storm/lib/jetty-util-6.1.26.jar
+-rw-r--r-- root/root      6372 2013-12-27 14:24 ./usr/lib/storm/lib/compojure-1.1.3.jar
+-rw-r--r-- root/root      4965 2013-12-27 14:24 ./usr/lib/storm/lib/minlog-1.2.jar
+-rw-r--r-- root/root    270553 2013-12-27 14:24 ./usr/lib/storm/lib/snakeyaml-1.11.jar
+-rw-r--r-- root/root    363460 2014-03-26 12:22 ./usr/lib/storm/lib/kryo-2.21.jar
+-rw-r--r-- root/root    251784 2013-12-27 14:24 ./usr/lib/storm/lib/logback-classic-1.0.6.jar
+-rw-r--r-- root/root    349706 2013-12-27 14:24 ./usr/lib/storm/lib/logback-core-1.0.6.jar
+-rw-r--r-- root/root     51426 2013-12-27 14:24 ./usr/lib/storm/lib/disruptor-2.10.1.jar
+-rw-r--r-- root/root     57779 2013-12-27 14:23 ./usr/lib/storm/lib/commons-fileupload-1.2.1.jar
+-rw-r--r-- root/root     25962 2013-12-27 14:24 ./usr/lib/storm/lib/slf4j-api-1.6.5.jar
+-rw-r--r-- root/root    569231 2013-12-27 14:24 ./usr/lib/storm/lib/joda-time-2.0.jar
+-rw-r--r-- root/root    589512 2014-03-26 14:41 ./usr/lib/storm/lib/httpclient-4.3.3.jar
+-rw-r--r-- root/root     20647 2013-12-27 14:24 ./usr/lib/storm/lib/log4j-over-slf4j-1.6.6.jar
+-rw-r--r-- root/root     62050 2014-01-30 21:06 ./usr/lib/storm/lib/commons-logging-1.1.3.jar
+-rw-r--r-- root/root      2441 2013-12-27 14:24 ./usr/lib/storm/lib/ring-jetty-adapter-0.3.11.jar
+-rw-r--r-- root/root      4646 2013-12-27 14:24 ./usr/lib/storm/lib/math.numeric-tower-0.0.1.jar
+-rw-r--r-- root/root      3429 2014-05-07 12:07 ./usr/lib/storm/lib/tools.cli-0.2.4.jar
+-rw-r--r-- root/root     52543 2013-12-27 14:24 ./usr/lib/storm/lib/commons-exec-1.1.jar
+-rw-r--r-- root/root    539912 2013-12-27 14:24 ./usr/lib/storm/lib/jetty-6.1.26.jar
+-rw-r--r-- root/root     46717 2014-03-26 12:22 ./usr/lib/storm/lib/chill-java-0.3.5.jar
+-rw-r--r-- root/root      7088 2013-12-27 14:24 ./usr/lib/storm/lib/tools.logging-0.2.3.jar
+-rw-r--r-- root/root    134133 2013-12-27 14:24 ./usr/lib/storm/lib/servlet-api-2.5-20081211.jar
+-rw-r--r-- root/root   3585371 2013-12-29 23:47 ./usr/lib/storm/lib/clojure-1.5.1.jar
+-rw-r--r-- root/root      6204 2013-12-27 14:23 ./usr/lib/storm/lib/clj-stacktrace-0.2.4.jar
+-rw-r--r-- root/root    105112 2013-12-27 14:23 ./usr/lib/storm/lib/servlet-api-2.5.jar
+-rw-r--r-- root/root      3129 2013-12-27 14:24 ./usr/lib/storm/lib/core.incubator-0.1.0.jar
+-rw-r--r-- root/root    279193 2013-12-27 14:21 ./usr/lib/storm/lib/commons-lang-2.5.jar
+-rw-r--r-- root/root     26245 2014-03-26 12:22 ./usr/lib/storm/lib/carbonite-1.4.0.jar
+-rw-r--r-- root/root    779974 2014-01-22 01:37 ./usr/lib/storm/lib/zookeeper-3.4.5.jar
+-rw-r--r-- root/root      9386 2013-12-27 14:24 ./usr/lib/storm/lib/clj-time-0.4.1.jar
+-rw-r--r-- root/root     36046 2013-12-27 14:24 ./usr/lib/storm/lib/objenesis-1.2.jar
+-rw-r--r-- root/root      5170 2013-12-27 14:24 ./usr/lib/storm/lib/tools.macro-0.1.0.jar
+-rw-r--r-- root/root   1891102 2013-12-27 14:24 ./usr/lib/storm/lib/guava-13.0.jar
+-rw-r--r-- root/root      7898 2013-12-27 14:24 ./usr/lib/storm/lib/hiccup-0.3.6.jar
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/lib/storm/bin/
+-rwxr-xr-x root/root     16901 2014-05-29 12:20 ./usr/lib/storm/bin/storm
+-rw-r--r-- root/root      7445 2014-06-09 14:24 ./usr/lib/storm/README.markdown
+-rw-r--r-- root/root     34239 2014-06-12 20:46 ./usr/lib/storm/CHANGELOG.md
+-rw-r--r-- root/root     22822 2014-06-11 16:07 ./usr/lib/storm/LICENSE
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./usr/bin/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./etc/
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./etc/init.d/
+-rwxr-xr-x root/root      1726 2014-07-25 09:30 ./etc/init.d/storm-ui
+-rwxr-xr-x root/root      1738 2014-07-25 09:30 ./etc/init.d/storm-drpc
+-rwxr-xr-x root/root      1817 2014-07-25 09:30 ./etc/init.d/storm-supervisor
+-rwxr-xr-x root/root      1769 2014-07-25 09:30 ./etc/init.d/storm-nimbus
+drwxr-xr-x root/root         0 2014-07-25 11:31 ./etc/storm/
+-rw-r--r-- root/root      3083 2014-05-28 12:24 ./etc/storm/cluster.xml
+-rw-r--r-- root/root      1126 2014-05-28 12:24 ./etc/storm/storm_env.ini
+-rw-r--r-- root/root      1613 2014-05-28 12:24 ./etc/storm/storm.yaml
+lrwxrwxrwx root/root         0 2014-07-25 11:31 ./usr/lib/storm/conf -> /etc/storm
+lrwxrwxrwx root/root         0 2014-07-25 11:31 ./usr/lib/storm/logback -> /etc/storm
+lrwxrwxrwx root/root         0 2014-07-25 11:31 ./usr/lib/storm/storm-local -> /var/lib/storm/storm-local
+lrwxrwxrwx root/root         0 2014-07-25 11:31 ./usr/lib/storm/logs -> /var/log/storm
+lrwxrwxrwx root/root         0 2014-07-25 11:31 ./usr/bin/storm -> ../lib/storm/bin/storm
 ```
 
-Read Materials:
------------------------
+## License:
+
+[Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0), same as Apache Storm project.
+
+## Links:
 
 * according to [this discussion](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=621833) debian package should not remove any users on removal. Recommended behaviour is disabling a user.
 * Interesting tutorial how to install storm on .rpm based distibution - [Running multi-node storm cluster by Michael Noll](http://www.michael-noll.com/tutorials/running-multi-node-storm-cluster/)
+* [This](http://serverfault.com/questions/96416/should-i-install-linux-applications-in-var-or-opt) is a good answer "where should software be installed".
