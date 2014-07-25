@@ -3,7 +3,7 @@ set -e
 
 # /usr/sbin/adduser --system --home=/usr/lib/storm --gecos=Storm --disabled-password --shell=/bin/bash --group storm
 
-# if there is no storm - create one, 
+# if there is no storm - create one,
 # home folder creation is managed by packet
 # TODO: questionable if --ingroup parameter should be used instead of --group
 if ! getent passwd storm > /dev/null; then
@@ -11,7 +11,7 @@ if ! getent passwd storm > /dev/null; then
   echo "Creating storm user account and group"
   addgroup --quiet storm
 
-  adduser --system --quiet --home /opt/storm --no-create-home \
+  adduser --system --quiet --home /usr/lib/storm --no-create-home \
     --shell /bin/bash --ingroup storm \
     --gecos "Storm distributed realtime computation system" storm
 fi
